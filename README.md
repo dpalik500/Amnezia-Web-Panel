@@ -73,6 +73,11 @@ Configuration panel for system parameters and preferences:
     pip install -r requirements.txt
     ```
 
+
+## 🐳 Docker Installation
+
+https://hub.docker.com/r/prvtpro/amnezia-panel
+
 ## 🚀 Getting Started
 
 Launch the application:
