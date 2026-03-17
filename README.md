@@ -2,7 +2,41 @@
 
 A modern, high-performance web interface for simplified management of AmneziaWG and Xray (XTLS-Reality) servers. Designed to provide a premium user experience with robust administrative capabilities.
 
-![Interface Preview](https://github.com/user-attachments/assets/preview_placeholder.png)
+> ### 🔄 Compatibility with Official Amnezia Client
+> 
+> This panel is fully compatible with the official **Amnezia** applications!
+> 
+> **How to connect an existing server:**
+> 1. Add your pre-configured server by entering its **IP address**, **login** and **password**
+> 2. Go to the "Added Servers" section
+> 3. Wait for the automatic server verification
+> 4. The panel will automatically detect:
+>    - ✅ Installed protocols
+>    - ✅ Existing users
+>    - ✅ Current configuration
+>
+> ⚡ **After verification, you can manage the server directly from the panel!**
+
+![Servers Dashboard](https://github.com/PRVTPRO/Amnezia-Web-Panel/blob/main/screen/panel1.png)
+
+
+### Additional Sections
+
+<details>
+<summary><b>👥 Users Management</b> (click to expand)</summary>
+<br>
+User management interface with permissions and access controls:
+
+![Users Management](https://github.com/PRVTPRO/Amnezia-Web-Panel/blob/main/screen/panel1-2.png)
+</details>
+
+<details>
+<summary><b>⚙️ System Settings</b> (click to expand)</summary>
+<br>
+Configuration panel for system parameters and preferences:
+
+![Settings Panel](https://github.com/PRVTPRO/Amnezia-Web-Panel/blob/main/screen/panel1-3.png)
+</details>
 
 ## 🚀 Key Features
 
@@ -40,7 +74,7 @@ A modern, high-performance web interface for simplified management of AmneziaWG 
 1.  **Clone the repository**:
     ```bash
     git clone https://github.com/amnezia-vpn/amnezia-client.git
-    cd amnezia-client/web-panel
+    cd Amnezia-Web-Panel
     ```
 
 2.  **Set up Virtual Environment**:
@@ -53,6 +87,11 @@ A modern, high-performance web interface for simplified management of AmneziaWG 
     ```bash
     pip install -r requirements.txt
     ```
+
+
+## 🐳 Docker Installation
+
+https://hub.docker.com/r/prvtpro/amnezia-panel
 
 ## 🚀 Getting Started
 
