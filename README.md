@@ -74,7 +74,7 @@ If you require any custom features not currently available in the panel, **let u
 * **Xray Self-Steal Mode**: Advanced Xray configuration with self-steal functionality
 * **And much more!**
 
-**Or better yet**
+**Or better yet, contribute!**
 
 
 ## 🏗 Prerequisites
