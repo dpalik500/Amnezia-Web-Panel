@@ -87,7 +87,7 @@ If you require any custom features not currently available in the panel, **let u
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/amnezia-vpn/amnezia-client.git
+    git clone https://github.com/PRVTPRO/Amnezia-Web-Panel.git
     cd Amnezia-Web-Panel
     ```
 
