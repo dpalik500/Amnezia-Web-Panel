@@ -183,6 +183,30 @@
             </button>
         </div>
     </div>
+
+    <!-- WireGuard Card -->
+    <div class="card card-hover protocol-card protocol-wireguard" id="proto-wireguard">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+            <div class="protocol-icon">🔒</div>
+            <div class="flex gap-sm" id="wireguard-ctrl" style="display:none!important;"></div>
+        </div>
+        <div class="protocol-name">WireGuard</div>
+        <div class="protocol-desc">
+            {{ _('wireguard_desc') }}
+        </div>
+        <div class="protocol-status" id="wireguard-status">
+            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+        </div>
+        <div id="wireguard-info" class="hidden">
+            <div class="protocol-info" id="wireguard-info-grid"></div>
+        </div>
+        <div class="flex gap-sm" id="wireguard-actions">
+            <button class="btn btn-primary btn-sm" onclick="openInstallModal('wireguard')" id="wireguard-install-btn"
+                style="flex:1">
+                {{ _('install') }}
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="protocol-cards hidden" id="services-grid">
@@ -249,6 +273,7 @@
                 <option value="awg_legacy">AWG Legacy</option>
                 <option value="xray">Xray</option>
                 <option value="telemt">Telemt</option>
+                <option value="wireguard">WireGuard</option>
             </select>
             <button class="btn btn-primary btn-sm" onclick="openAddConnectionModal()">
                 <span>＋</span> {{ _('add') }}
@@ -513,6 +538,7 @@
             case 'awg_legacy': return 'AWG Legacy';
             case 'xray': return 'Xray';
             case 'telemt': return 'Telemt';
+            case 'wireguard': return 'WireGuard';
             case 'dns': return 'AmneziaDNS';
             default: return proto;
         }
@@ -566,7 +592,7 @@
 
                 for (const [proto, info] of Object.entries(data.protocols)) {
                     updateProtocolCard(proto, info);
-                    const isVPN = ['awg', 'awg2', 'awg_legacy', 'xray', 'telemt'].includes(proto);
+                    const isVPN = ['awg', 'awg2', 'awg_legacy', 'xray', 'telemt', 'wireguard'].includes(proto);
                     if (info.container_running && isVPN) {
                         const opt = document.createElement('option');
                         opt.value = proto;
@@ -607,7 +633,7 @@
     }
 
     function updateStatusCounts(protocols) {
-        const protos = ['awg', 'awg2', 'awg_legacy', 'xray', 'telemt'];
+        const protos = ['awg', 'awg2', 'awg_legacy', 'xray', 'telemt', 'wireguard'];
         const servs = ['dns'];
 
         let pRunning = 0, pTotal = protos.length;
