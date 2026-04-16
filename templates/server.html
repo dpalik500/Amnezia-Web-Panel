@@ -384,6 +384,18 @@
         <div id="telemtConnOptions"
             style="display:none; padding: var(--space-md); background: rgba(0,0,0,0.03); border-radius: var(--radius-md); margin-bottom: var(--space-md);">
             <div class="form-group">
+                <label class="form-label">Secret (Hex 32 chars)</label>
+                <input class="form-input" type="text" id="telemtSecret" placeholder="Optional (auto-generated if empty)">
+            </div>
+            <div class="form-group">
+                <label class="form-label">AD Tag (Hex 32 chars)</label>
+                <input class="form-input" type="text" id="telemtAdTag" placeholder="Optional">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Max TCP Conns</label>
+                <input class="form-input" type="number" id="telemtMaxConns" placeholder="Optional (e.g. 1000)" min="0">
+            </div>
+            <div class="form-group">
                 <label class="form-label">Quota (Bytes)</label>
                 <input class="form-input" type="number" id="telemtQuota" placeholder="Optional (e.g. 1073741824)"
                     min="0">
@@ -1039,6 +1051,9 @@
                 params.telemt_quota = document.getElementById('telemtQuota').value || null;
                 params.telemt_max_ips = parseInt(document.getElementById('telemtMaxIps').value) || null;
                 params.telemt_expiry = document.getElementById('telemtExpiry').value || null;
+                params.telemt_secret = document.getElementById('telemtSecret').value || null;
+                params.telemt_ad_tag = document.getElementById('telemtAdTag').value || null;
+                params.telemt_max_conns = parseInt(document.getElementById('telemtMaxConns').value) || null;
                 if (isEditingConn) params.client_id = editingClientId;
             }
             const result = await apiCall(isEditingConn ? `/api/servers/${SERVER_ID}/connections/edit` : `/api/servers/${SERVER_ID}/connections/add`, 'POST', params);
@@ -1090,12 +1105,18 @@
             if (isEdit && clientData) {
                 editingClientId = clientData.clientName;
                 document.getElementById('telemtQuota').value = clientData.quota || '';
-                document.getElementById('telemtMaxIps').value = clientData.active_ips || ''; // actually max_ips isn't stored in api data yet, assume it was active_ips for now or better - just empty
+                document.getElementById('telemtMaxIps').value = ''; 
                 document.getElementById('telemtExpiry').value = clientData.expiry || '';
+                document.getElementById('telemtSecret').value = clientData.token || '';
+                document.getElementById('telemtAdTag').value = clientData.user_ad_tag || '';
+                document.getElementById('telemtMaxConns').value = clientData.max_tcp_conns || '';
             } else {
                 document.getElementById('telemtQuota').value = '';
                 document.getElementById('telemtMaxIps').value = '';
                 document.getElementById('telemtExpiry').value = '';
+                document.getElementById('telemtSecret').value = '';
+                document.getElementById('telemtAdTag').value = '';
+                document.getElementById('telemtMaxConns').value = '';
             }
         } else {
             telemtOpts.style.display = 'none';

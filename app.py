@@ -47,7 +47,7 @@ else:
     application_path = os.path.dirname(__file__)
 
 DATA_FILE = os.path.join(application_path, 'data.json')
-CURRENT_VERSION = "v1.4.0"
+CURRENT_VERSION = "v1.4.1"
 
 
 # ======================== Translations ========================
@@ -505,6 +505,9 @@ class AddConnectionRequest(BaseModel):
     telemt_quota: Optional[str] = None
     telemt_max_ips: Optional[int] = None
     telemt_expiry: Optional[str] = None
+    telemt_secret: Optional[str] = None
+    telemt_ad_tag: Optional[str] = None
+    telemt_max_conns: Optional[int] = None
 
 
 class EditConnectionRequest(BaseModel):
@@ -513,6 +516,9 @@ class EditConnectionRequest(BaseModel):
     telemt_quota: Optional[str] = None
     telemt_max_ips: Optional[int] = None
     telemt_expiry: Optional[str] = None
+    telemt_secret: Optional[str] = None
+    telemt_ad_tag: Optional[str] = None
+    telemt_max_conns: Optional[int] = None
 
 
 class ConnectionActionRequest(BaseModel):
@@ -539,6 +545,12 @@ class AddUserRequest(BaseModel):
     protocol: Optional[str] = None
     connection_name: Optional[str] = None
     expiration_date: Optional[str] = None
+    telemt_quota: Optional[str] = None
+    telemt_max_ips: Optional[int] = None
+    telemt_expiry: Optional[str] = None
+    telemt_secret: Optional[str] = None
+    telemt_ad_tag: Optional[str] = None
+    telemt_max_conns: Optional[int] = None
 
 
 
@@ -613,6 +625,9 @@ class AddUserConnectionRequest(BaseModel):
     telemt_quota: Optional[str] = None
     telemt_max_ips: Optional[int] = None
     telemt_expiry: Optional[str] = None
+    telemt_secret: Optional[str] = None
+    telemt_ad_tag: Optional[str] = None
+    telemt_max_conns: Optional[int] = None
 
 
 class ShareSetupRequest(BaseModel):
@@ -1443,7 +1458,10 @@ async def api_add_connection(request: Request, server_id: int, req: AddConnectio
                 req.protocol, req.name, server['host'], port,
                 telemt_quota=req.telemt_quota,
                 telemt_max_ips=req.telemt_max_ips,
-                telemt_expiry=req.telemt_expiry
+                telemt_expiry=req.telemt_expiry,
+                secret=req.telemt_secret,
+                user_ad_tag=req.telemt_ad_tag,
+                max_tcp_conns=req.telemt_max_conns
             )
         elif req.protocol == 'wireguard':
             result = manager.add_client(req.name, server['host'])
@@ -1521,6 +1539,9 @@ async def api_edit_connection(request: Request, server_id: int, req: EditConnect
             edit_params['telemt_quota'] = req.telemt_quota
             edit_params['telemt_max_ips'] = req.telemt_max_ips
             edit_params['telemt_expiry'] = req.telemt_expiry
+            edit_params['secret'] = req.telemt_secret
+            edit_params['user_ad_tag'] = req.telemt_ad_tag
+            edit_params['max_tcp_conns'] = req.telemt_max_conns
             
         result = manager.edit_client(req.protocol, req.client_id, edit_params)
         ssh.disconnect()
@@ -1695,7 +1716,18 @@ async def api_add_user(request: Request, req: AddUserRequest):
                 ssh = get_ssh(server)
                 ssh.connect()
                 manager = get_protocol_manager(ssh, req.protocol)
-                conn_result = manager.add_client(req.protocol, conn_name, server['host'], port)
+                if req.protocol == 'telemt':
+                    conn_result = manager.add_client(
+                        req.protocol, conn_name, server['host'], port,
+                        telemt_quota=req.telemt_quota,
+                        telemt_max_ips=req.telemt_max_ips,
+                        telemt_expiry=req.telemt_expiry,
+                        secret=req.telemt_secret,
+                        user_ad_tag=req.telemt_ad_tag,
+                        max_tcp_conns=req.telemt_max_conns
+                    )
+                else:
+                    conn_result = manager.add_client(req.protocol, conn_name, server['host'], port)
                 ssh.disconnect()
 
                 if conn_result.get('client_id'):
@@ -1825,7 +1857,18 @@ async def api_add_user_connection(request: Request, user_id: str, req: AddUserCo
             result = {'client_id': target_client_id, 'config': config}
         else:
             # Create new client
-            result = await asyncio.to_thread(manager.add_client, req.protocol, req.name, server['host'], port)
+            if req.protocol == 'telemt':
+                result = await asyncio.to_thread(
+                    manager.add_client, req.protocol, req.name, server['host'], port,
+                    telemt_quota=req.telemt_quota,
+                    telemt_max_ips=req.telemt_max_ips,
+                    telemt_expiry=req.telemt_expiry,
+                    secret=req.telemt_secret,
+                    user_ad_tag=req.telemt_ad_tag,
+                    max_tcp_conns=req.telemt_max_conns
+                )
+            else:
+                result = await asyncio.to_thread(manager.add_client, req.protocol, req.name, server['host'], port)
         
         await asyncio.to_thread(ssh.disconnect)
 
