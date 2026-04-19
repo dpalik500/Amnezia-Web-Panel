@@ -46,7 +46,7 @@ if getattr(sys, 'frozen', False):
 else:
     application_path = os.path.dirname(__file__)
 
-DATA_FILE = os.path.join(application_path, 'data.json')
+DATA_FILE = os.path.join(application_path, 'data/data.json')
 CURRENT_VERSION = "v1.4.2"
 
 
