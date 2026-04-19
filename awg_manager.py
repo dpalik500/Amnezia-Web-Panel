@@ -823,7 +823,7 @@ tail -f /dev/null
 
         return result
 
-    def add_client(self, protocol_type, client_name, server_host, port, tier="free"):
+    def add_client(self, protocol_type, client_name, server_host, port):
         """
         Add a new client/peer to the AWG config.
         Returns the client config as a string for the .conf file.
