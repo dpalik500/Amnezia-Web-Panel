@@ -397,6 +397,12 @@ a:hover {
     pointer-events: none;
 }
 
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .btn .spinner {
     width: 16px;
     height: 16px;
