@@ -47,10 +47,12 @@
                 <a href="/server/{{ loop.index0 }}" class="btn btn-secondary btn-sm" style="flex:1">
                     {{ _('manage') }}
                 </a>
+                {% if current_user.role == 'admin' %}
                 <button class="btn btn-danger btn-sm btn-icon" onclick="deleteServer({{ loop.index0 }})"
                     title="{{ _('delete') }}">
                     🗑
                 </button>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -62,9 +64,11 @@
         <div class="empty-desc">
             {{ _('add_server_desc') }}
         </div>
+        {% if current_user == 'admin' %}
         <button class="btn btn-primary" onclick="openModal('addServerModal')">
             <span>＋</span> {{ _('add_server') }}
         </button>
+        {% endif %}
     </div>
     {% endif %}
 </section>
