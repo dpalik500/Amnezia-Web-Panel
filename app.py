@@ -197,8 +197,29 @@ async def perform_delete_user(data: dict, user_id: str):
     return True
 
 
-    return True
+async def perform_toggle_user(data: dict, user_id: str, enable: bool) -> bool:
+    user = next((u for u in data['users'] if u['id'] == user_id), None)
+    if not user:
+        return False
 
+    user['enabled'] = True if user['enabled'] == False else False
+
+    user_connections = [c for c in data.get('user_connections', []) if c['user_id'] == user_id]
+    for uc in user_connections:
+        try:
+            sid = uc['server_id']
+            if sid >= len(data['servers']):
+                continue
+
+            server = data['servers'][sid]
+            ssh = get_ssh(server)
+            manager = get_protocol_manager(ssh, uc['protocol'])
+            _manager_call(manager, 'toggle_client', uc['protocol'], uc['client_id'])
+            ssh.disconnect()
+        except Exception as e:
+            logger.warning(f'Failed to toggle connection {uc['client_id']} during user toggle: {e}"')
+
+    return True
 
 async def perform_mass_operations(delete_uids: List[str] = None, toggle_uids: List[tuple] = None, create_conns: List[dict] = None):
     """
@@ -889,14 +910,14 @@ async def server_detail(request: Request, server_id: int):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url='/login', status_code=302)
-    if user['role'] not in ('admin', 'support'):
+    if user['role'] not in ('admin', 'support', 'helper'):
         return RedirectResponse(url='/my', status_code=302)
     data = load_data()
     if server_id >= len(data['servers']):
         return RedirectResponse(url='/')
     server = data['servers'][server_id]
     users_list = data.get('users', [])
-    return tpl(request, 'server.html', server=server, server_id=server_id, users=users_list)
+    return tpl(request, 'server.html', server=server, server_id=server_id, users=users_list, curent_user=user)
 
 
 @app.get('/users', response_class=HTMLResponse)
@@ -904,7 +925,7 @@ async def users_page(request: Request):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url='/login', status_code=302)
-    if user['role'] not in ('admin', 'support'):
+    if user['role'] not in ('admin', 'support', 'helper'):
         return RedirectResponse(url='/my', status_code=302)
     data = load_data()
     users_list = data.get('users', [])
@@ -979,7 +1000,7 @@ async def api_login(request: Request, req: LoginRequest):
 
 def _check_admin(request):
     user = get_current_user(request)
-    if not user or user['role'] not in ('admin', 'support'):
+    if not user or user['role'] not in ('admin', 'support', 'helper'):
         return None
     return user
 
@@ -1615,16 +1636,25 @@ async def api_toggle_connection(request: Request, server_id: int, req: ToggleCon
 
 @app.get('/api/users')
 async def api_list_users(request: Request, search: str = '', page: int = 1, size: int = 10):
-    if not _check_admin(request):
+    cur_user = get_current_user(request)
+    if not cur_user or cur_user['role'] not in ('admin', 'support', 'helper'):
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
+    
     data = load_data()
     all_users = data.get('users', [])
     conns = data.get('user_connections', [])
     
-    # Filter
+    # Filter by role: helpers can only see themselves and regular users
+    visible_users = []
+    if cur_user['role'] == 'helper':
+        visible_users = [u for u in all_users if u['id'] == cur_user['id'] or u['role'] == 'user']
+    else:
+        visible_users = all_users
+    
+    # Filter by search
     filtered = []
     search = search.lower()
-    for u in all_users:
+    for u in visible_users:
         if search:
             match = (search in u['username'].lower() or 
                      (u.get('email') and search in u['email'].lower()) or 
@@ -1644,6 +1674,7 @@ async def api_list_users(request: Request, search: str = '', page: int = 1, size
             'id': u['id'], 'username': u['username'], 'role': u['role'],
             'enabled': u.get('enabled', True),
             'created_at': u.get('created_at', ''),
+            'expiration_date': u.get('expiration_date'),
             'telegramId': u.get('telegramId'),
             'email': u.get('email'),
             'description': u.get('description'),
@@ -1670,7 +1701,7 @@ async def api_list_users(request: Request, search: str = '', page: int = 1, size
 @app.post('/api/users/add')
 async def api_add_user(request: Request, req: AddUserRequest):
     cur = get_current_user(request)
-    if not cur or cur['role'] != 'admin':
+    if not cur or cur['role'] not in ('admin', 'helper'):
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     try:
         data = load_data()
@@ -1678,7 +1709,7 @@ async def api_add_user(request: Request, req: AddUserRequest):
         # Check duplicate
         if any(u['username'] == req.username for u in data.get('users', [])):
             return JSONResponse({'error': _t('user_exists', lang)}, status_code=400)
-        if req.role not in ('admin', 'support', 'user'):
+        if req.role not in ('admin', 'support', 'helper', 'user'):
             return JSONResponse({'error': 'Invalid role'}, status_code=400)
         new_user = {
             'id': str(uuid.uuid4()),
@@ -1817,7 +1848,7 @@ async def api_delete_user(request: Request, user_id: str):
 @app.post('/api/users/{user_id}/toggle')
 async def api_toggle_user(request: Request, user_id: str, req: ToggleUserRequest):
     cur = get_current_user(request)
-    if not cur or cur['role'] != 'admin':
+    if not cur or cur['role'] not in ('admin', 'helper'):
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     try:
         data = load_data()

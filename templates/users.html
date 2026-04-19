@@ -17,7 +17,7 @@
             <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
         </div>
 
-        {% if current_user.role == 'admin' %}
+        {% if current_user.role in ['admin', 'support', 'helper'] %}
         <button class="btn btn-primary" onclick="openModal('addUserModal')" style="flex-shrink: 0;">
             <span>＋</span> {{ _('add_user') }}
         </button>
@@ -73,16 +73,20 @@
             <div class="form-group">
                 <label class="form-label">{{ _('role_label') }}</label>
                 <select class="form-select" id="newRole">
+                    {% if current_user.role in ['helper'] %}
                     <option value="user">{{ _('role_user_desc') }}</option>
+                    {% else %}
+                    <option value="helper">Helper</option>
                     <option value="support">{{ _('role_support_desc') }}</option>
                     <option value="admin">{{ _('role_admin_desc') }}</option>
+                    {% endif %}
                 </select>
             </div>
 
             <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                 <div class="form-group">
                     <label class="form-label">{{ _('tg_id_label') }}</label>
-                    <input class="form-input" type="text" id="newTelegramId" placeholder="@username or ID">
+                    <input class="form-input" type="text" id="newTelegramId" placeholder="Discord ID">
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ _('email_label') }}</label>
@@ -226,10 +230,12 @@
                 <textarea class="form-input" id="editUserDesc" rows="2"
                     placeholder="{{ _('description_label') }}"></textarea>
             </div>
+            {% if current_user.role in ['admin', 'support'] %}
             <div class="form-group">
                 <label class="form-label">{{ _('new_password_hint') }}</label>
                 <input type="password" class="form-input" id="editUserPass" placeholder="••••••••">
             </div>
+            {% endif %}
             <div class="flex justify-end" style="margin-top: var(--space-lg);">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')"
                     style="margin-right: var(--space-sm);">{{ _('cancel') }}</button>
@@ -430,7 +436,7 @@
                         <div>
                             <div class="client-name">
                                 ${u.username}
-                                <span class="badge badge-${u.role === 'admin' ? 'success' : (u.role === 'support' ? 'info' : 'warn')}" 
+                                <span class="badge badge-${u.role === 'admin' ? 'success' : (u.role === 'support' ? 'info' : (u.role === 'helper' ? 'success' : 'secondary' ))}"
                                       style="font-size:0.65rem; margin-left: var(--space-xs);">
                                     ${u.role.toUpperCase()}
                                 </span>
@@ -483,25 +489,31 @@
                         </div>
                     </div>
                     <div class="client-actions" style="flex-wrap: wrap; justify-content: flex-end; max-width: 140px;">
-                        {% if current_user.role == 'admin' %}
+                        {% if current_user.role in ['admin', 'support', 'helper']%}
                         <button class="btn btn-secondary btn-sm btn-icon" 
                                 onclick="openAddConnectionForUser('${u.id}', '${u.username}')" 
                                 title="${_('add_connection')}">🔗</button>
                         <button class="btn btn-secondary btn-sm btn-icon" 
                                 onclick='openEditUser({"id": "${u.id}", "username": "${u.username}", "tg": "${u.telegramId || ""}", "email": "${u.email || ""}", "desc": "${u.description || ""}", "limit": "${u.traffic_limit ? (u.traffic_limit / Math.pow(1024, 3)).toFixed(2) : 0}", "strategy": "${u.traffic_reset_strategy || 'never'}", "expiration": "${u.expiration_date || ''}"})'
                                 title="${_('edit')}">✏️</button>
+                        {% if current_user.role == 'helper' %}
+                        {% else %}
                         <button class="btn btn-secondary btn-sm btn-icon" onclick="openShareModal(this.dataset)"
                                 data-id="${u.id}" data-username="${u.username}" data-token="${u.share_token || ''}"
                                 data-enabled="${u.share_enabled ? 'true' : 'false'}"
                                 data-haspassword="${u.has_share_password ? 'true' : 'false'}"
                                 title="${_('share_access')}">📤</button>
+                        {% endif %}
                         ${u.id !== "{{ current_user.id }}" ? `
                             <button class="btn btn-secondary btn-sm btn-icon" onclick="toggleUser(this.dataset)"
                                     data-id="${u.id}" data-enable="${u.enabled ? 'false' : 'true'}"
                                     title="${u.enabled ? _('stop_btn') : _('start_btn')}">
                                 ${u.enabled ? '🔵' : '⚫'}
                             </button>
+                            {% if current_user.role == 'helper' %}
+                            {% else %}
                             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUser('${u.id}')" title="${_('delete')}">🗑</button>
+                            {% endif %}
                         ` : ''}
                         {% endif %}
                     </div>

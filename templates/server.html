@@ -61,205 +61,207 @@
     </button>
 </div>
 
-<div class="protocol-cards" id="protocols-grid">
-    <!-- AWG2 Card (first - new version) -->
-    <div class="card card-hover protocol-card protocol-awg" id="proto-awg2">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">✨</div>
-            <div class="flex gap-sm" id="awg2-ctrl" style="display:none!important;"></div>
+{% if current_user.role == 'admin' %}
+    <div class="protocol-cards" id="protocols-grid">
+        <!-- AWG2 Card (first - new version) -->
+        <div class="card card-hover protocol-card protocol-awg" id="proto-awg2">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">✨</div>
+                <div class="flex gap-sm" id="awg2-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">AmneziaWG 2.0 <span
+                    style="font-size:0.65rem; background:var(--accent); color:#fff; padding:2px 6px; border-radius:8px; vertical-align:middle;">NEW</span>
+            </div>
+            <div class="protocol-desc">
+                {{ _('awg_desc') }}
+            </div>
+            <div class="protocol-status" id="awg2-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="awg2-info" class="hidden">
+                <div class="protocol-info" id="awg2-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="awg2-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg2')" id="awg2-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
-        <div class="protocol-name">AmneziaWG 2.0 <span
-                style="font-size:0.65rem; background:var(--accent); color:#fff; padding:2px 6px; border-radius:8px; vertical-align:middle;">NEW</span>
+
+        <!-- AWG Card -->
+        <div class="card card-hover protocol-card protocol-awg" id="proto-awg">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">🔮</div>
+                <div class="flex gap-sm" id="awg-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">AmneziaWG</div>
+            <div class="protocol-desc">
+                {{ _('awg_desc') }}
+            </div>
+            <div class="protocol-status" id="awg-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="awg-info" class="hidden">
+                <div class="protocol-info" id="awg-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="awg-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg')" id="awg-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
-        <div class="protocol-desc">
-            {{ _('awg_desc') }}
+
+        <!-- AWG Legacy Card -->
+        <div class="card card-hover protocol-card protocol-legacy" id="proto-awg-legacy">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">📡</div>
+                <div class="flex gap-sm" id="awg-legacy-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">AmneziaWG Legacy</div>
+            <div class="protocol-desc">
+                {{ _('awg_legacy_desc') }}
+            </div>
+            <div class="protocol-status" id="awg-legacy-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="awg-legacy-info" class="hidden">
+                <div class="protocol-info" id="awg-legacy-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="awg-legacy-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg_legacy')" id="awg-legacy-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
-        <div class="protocol-status" id="awg2-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+
+        <!-- Xray Card -->
+        <div class="card card-hover protocol-card protocol-xray" id="proto-xray">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">⚡</div>
+                <div class="flex gap-sm" id="xray-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">Xray (VLESS-Reality)</div>
+            <div class="protocol-desc">
+                {{ _('xray_desc') }}
+            </div>
+            <div class="protocol-status" id="xray-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="xray-info" class="hidden">
+                <div class="protocol-info" id="xray-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="xray-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('xray')" id="xray-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
-        <div id="awg2-info" class="hidden">
-            <div class="protocol-info" id="awg2-info-grid"></div>
+
+        <!-- Telemt Card -->
+        <div class="card card-hover protocol-card protocol-telemt" id="proto-telemt">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">✈</div>
+                <div class="flex gap-sm" id="telemt-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">Telemt (Telegram Proxy)</div>
+            <div class="protocol-desc">
+                {{ _('telemt_desc') }}
+            </div>
+            <div class="protocol-status" id="telemt-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="telemt-info" class="hidden">
+                <div class="protocol-info" id="telemt-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="telemt-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('telemt')" id="telemt-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
-        <div class="flex gap-sm" id="awg2-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg2')" id="awg2-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
+
+        <!-- WireGuard Card -->
+        <div class="card card-hover protocol-card protocol-wireguard" id="proto-wireguard">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">🔒</div>
+                <div class="flex gap-sm" id="wireguard-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">WireGuard</div>
+            <div class="protocol-desc">
+                {{ _('wireguard_desc') }}
+            </div>
+            <div class="protocol-status" id="wireguard-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="wireguard-info" class="hidden">
+                <div class="protocol-info" id="wireguard-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="wireguard-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('wireguard')" id="wireguard-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- AWG Card -->
-    <div class="card card-hover protocol-card protocol-awg" id="proto-awg">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">🔮</div>
-            <div class="flex gap-sm" id="awg-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">AmneziaWG</div>
-        <div class="protocol-desc">
-            {{ _('awg_desc') }}
-        </div>
-        <div class="protocol-status" id="awg-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="awg-info" class="hidden">
-            <div class="protocol-info" id="awg-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="awg-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg')" id="awg-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- AWG Legacy Card -->
-    <div class="card card-hover protocol-card protocol-legacy" id="proto-awg-legacy">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">📡</div>
-            <div class="flex gap-sm" id="awg-legacy-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">AmneziaWG Legacy</div>
-        <div class="protocol-desc">
-            {{ _('awg_legacy_desc') }}
-        </div>
-        <div class="protocol-status" id="awg-legacy-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="awg-legacy-info" class="hidden">
-            <div class="protocol-info" id="awg-legacy-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="awg-legacy-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('awg_legacy')" id="awg-legacy-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
+    <div class="protocol-cards hidden" id="services-grid">
+        <!-- DNS Card -->
+        <div class="card card-hover protocol-card protocol-dns" id="proto-dns">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
+                <div class="protocol-icon">🔍</div>
+                <div class="flex gap-sm" id="dns-ctrl" style="display:none!important;"></div>
+            </div>
+            <div class="protocol-name">AmneziaDNS</div>
+            <div class="protocol-desc">
+                {{ _('dns_desc') }}
+            </div>
+            <div class="protocol-status" id="dns-status">
+                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
+            </div>
+            <div id="dns-info" class="hidden">
+                <div class="protocol-info" id="dns-info-grid"></div>
+            </div>
+            <div class="flex gap-sm" id="dns-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInstallModal('dns')" id="dns-install-btn"
+                    style="flex:1">
+                    {{ _('install') }}
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Xray Card -->
-    <div class="card card-hover protocol-card protocol-xray" id="proto-xray">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">⚡</div>
-            <div class="flex gap-sm" id="xray-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">Xray (VLESS-Reality)</div>
-        <div class="protocol-desc">
-            {{ _('xray_desc') }}
-        </div>
-        <div class="protocol-status" id="xray-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="xray-info" class="hidden">
-            <div class="protocol-info" id="xray-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="xray-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('xray')" id="xray-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- Telemt Card -->
-    <div class="card card-hover protocol-card protocol-telemt" id="proto-telemt">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">✈</div>
-            <div class="flex gap-sm" id="telemt-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">Telemt (Telegram Proxy)</div>
-        <div class="protocol-desc">
-            {{ _('telemt_desc') }}
-        </div>
-        <div class="protocol-status" id="telemt-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="telemt-info" class="hidden">
-            <div class="protocol-info" id="telemt-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="telemt-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('telemt')" id="telemt-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
+    <div class="protocol-cards hidden" id="management-grid" style="margin-bottom: var(--space-xl);">
+        <div class="card" style="margin-bottom: var(--space-md); width:100%; max-width:600px;">
+            <div class="card-title">{{ _('server_management') }}</div>
+            <div class="card-subtitle" style="margin-bottom: var(--space-md);">
+                {{ _('server_management_desc') }}
+            </div>
+            <div class="flex" style="flex-direction: column; gap: var(--space-sm);">
+                <button class="btn btn-secondary" onclick="checkServer()" style="justify-content: flex-start; padding: 12px 20px;">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">🔄</span> {{ _('check_server_services') }}
+                </button>
+                <button class="btn btn-secondary" onclick="rebootServer()" style="justify-content: flex-start; padding: 12px 20px;">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">♻️</span> {{ _('reboot_server') }}
+                </button>
+                <button class="btn btn-danger" onclick="clearServer()" style="justify-content: flex-start; padding: 12px 20px; background: rgba(239, 68, 68, 0.05);">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">🗑️</span> {{ _('clear_server') }}
+                </button>
+                <button class="btn btn-danger" onclick="removeServer()" style="justify-content: flex-start; padding: 12px 20px;">
+                    <span style="font-size: 1.2rem; margin-right: 8px;">❌</span> {{ _('remove_server') }}
+                </button>
+            </div>
         </div>
     </div>
-
-    <!-- WireGuard Card -->
-    <div class="card card-hover protocol-card protocol-wireguard" id="proto-wireguard">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">🔒</div>
-            <div class="flex gap-sm" id="wireguard-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">WireGuard</div>
-        <div class="protocol-desc">
-            {{ _('wireguard_desc') }}
-        </div>
-        <div class="protocol-status" id="wireguard-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="wireguard-info" class="hidden">
-            <div class="protocol-info" id="wireguard-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="wireguard-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('wireguard')" id="wireguard-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
-        </div>
-    </div>
-</div>
-
-<div class="protocol-cards hidden" id="services-grid">
-    <!-- DNS Card -->
-    <div class="card card-hover protocol-card protocol-dns" id="proto-dns">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">🔍</div>
-            <div class="flex gap-sm" id="dns-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">AmneziaDNS</div>
-        <div class="protocol-desc">
-            {{ _('dns_desc') }}
-        </div>
-        <div class="protocol-status" id="dns-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="dns-info" class="hidden">
-            <div class="protocol-info" id="dns-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="dns-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('dns')" id="dns-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
-        </div>
-    </div>
-</div>
-
-<div class="protocol-cards hidden" id="management-grid" style="margin-bottom: var(--space-xl);">
-    <div class="card" style="margin-bottom: var(--space-md); width:100%; max-width:600px;">
-        <div class="card-title">{{ _('server_management') }}</div>
-        <div class="card-subtitle" style="margin-bottom: var(--space-md);">
-            {{ _('server_management_desc') }}
-        </div>
-        <div class="flex" style="flex-direction: column; gap: var(--space-sm);">
-            <button class="btn btn-secondary" onclick="checkServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">🔄</span> {{ _('check_server_services') }}
-            </button>
-            <button class="btn btn-secondary" onclick="rebootServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">♻️</span> {{ _('reboot_server') }}
-            </button>
-            <button class="btn btn-danger" onclick="clearServer()" style="justify-content: flex-start; padding: 12px 20px; background: rgba(239, 68, 68, 0.05);">
-                <span style="font-size: 1.2rem; margin-right: 8px;">🗑️</span> {{ _('clear_server') }}
-            </button>
-            <button class="btn btn-danger" onclick="removeServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">❌</span> {{ _('remove_server') }}
-            </button>
-        </div>
-    </div>
-</div>
+{% endif %}
 
 <!-- Connections Section (renamed from Clients) -->
-<div class="clients-section" id="connectionsSection" style="display:none;">
+<div class="clients-section" id="connectionsSection" style="">
     <div class="clients-header">
         <h2 class="section-title" style="margin-bottom:0;">
             <span class="icon">🔗</span>
@@ -563,10 +565,12 @@
             const el = document.getElementById('serverStats');
             el.style.display = '';
             el.innerHTML = `
+                {% if current_user.role in ['admin'] %}
                 <span class="stat-pill" title="CPU">⚡ ${stats.cpu || 0}%</span>
                 <span class="stat-pill" title="RAM: ${formatBytes(stats.ram_used)} / ${formatBytes(stats.ram_total)}">🧠 ${stats.ram_percent || 0}%</span>
                 <span class="stat-pill" title="Disk: ${formatBytes(stats.disk_used)} / ${formatBytes(stats.disk_total)}">💾 ${stats.disk_percent || 0}%</span>
                 <span class="stat-pill" title="Network">🌐 ↓${formatBytes(stats.net_rx)} ↑${formatBytes(stats.net_tx)}</span>
+                {% endif %}
             `;
         } catch (err) {
             console.warn('Stats load failed:', err);
@@ -672,10 +676,13 @@
         const actionsEl = document.getElementById(`${protoKey}-actions`);
         const ctrlEl = document.getElementById(`${protoKey}-ctrl`);
 
+        // For non-admin roles protocol cards may be absent in DOM.
+        if (!statusEl || !actionsEl) return;
+
         if (info.container_running) {
             installedProtocols[proto] = true;
             statusEl.innerHTML = `<span class="badge badge-success"><span class="badge-dot"></span> ${_('run')}</span>`;
-            if (info.port || info.clients_count !== undefined) {
+            if ((info.port || info.clients_count !== undefined) && infoEl && infoGrid) {
                 infoEl.classList.remove('hidden');
                 let grid = '';
                 if (info.port) {
