@@ -286,7 +286,7 @@ async def perform_mass_operations(delete_uids: List[str] = None, toggle_uids: Li
                                 if c['protocol'] == 'wireguard':
                                     tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
                                 else:
-                                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                    AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                                     container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
                                     tm = TierManager(ssh, container, 'awg0')
                                 await asyncio.to_thread(tm.apply_tier, client_ip, tier)
@@ -908,7 +908,7 @@ async def periodic_background_tasks():
                                                     cls = await asyncio.to_thread(_manager_call, mgr, 'get_clients', c['protocol'])
                                                     client_ip = next((cl.get('address') for cl in cls if cl.get('clientId') == c['client_id']), None)
                                                     if client_ip:
-                                                        from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                                        AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                                                         container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
                                                         tm = TierManager(ssh_conn, container, 'awg0')
                                                         await asyncio.to_thread(tm.apply_tier, client_ip, 'free')
@@ -1128,7 +1128,7 @@ async def api_update_user_tier(request: Request, user_id: str, req: UpdateTierRe
                         break
 
                 if client_ip:
-                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                    AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                     container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
                     interface = 'awg0'
                     tm = TierManager(ssh, container, interface)
@@ -1197,7 +1197,7 @@ async def api_get_tier_rules(request: Request, user_id: str):
                     container = 'amnezia-wireguard'
                     interface = 'wg0'
                 else:
-                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                    AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                     container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
                     interface = 'awg0'
 
@@ -1712,7 +1712,7 @@ async def api_add_connection(request: Request, server_id: int, req: AddConnectio
                             if req.protocol == 'wireguard':
                                 tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
                             else:
-                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                                 container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
                                 tm = TierManager(ssh, container, 'awg0')
                             tm.apply_tier(client_ip, tier)
@@ -1870,7 +1870,7 @@ async def api_toggle_connection(request: Request, server_id: int, req: ToggleCon
                             if req.protocol == 'wireguard':
                                 tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
                             else:
-                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                                 container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
                                 tm = TierManager(ssh, container, 'awg0')
                             tm.apply_tier(client_ip, tier)
@@ -2086,7 +2086,7 @@ async def api_update_user(request: Request, user_id: str, req: UpdateUserRequest
                         if c['protocol'] == 'wireguard':
                             tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
                         else:
-                            from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                            AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                             container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
                             tm = TierManager(ssh, container, 'awg0')
                         await asyncio.to_thread(tm.apply_tier, client_ip, req.tier)
@@ -2200,7 +2200,7 @@ async def api_add_user_connection(request: Request, user_id: str, req: AddUserCo
                             if req.protocol == 'wireguard':
                                 tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
                             else:
-                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                AWG_CONTAINER_NAMES = {'awg_legacy': 'amnezia-awg-legacy', 'awg2': 'amnezia-awg2'}
                                 container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
                                 tm = TierManager(ssh, container, 'awg0')
                             tm.apply_tier(client_ip, tier)

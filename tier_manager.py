@@ -93,7 +93,7 @@ class TierManager:
             cmds.append(f"iptables -I FORWARD {index} -s {client_ip} -d {ip} -j ACCEPT")
             index += 1
 
-        cmds.append(f"iptables -A FORWARD -s {client_ip} -j DROP")
+        cmds.append(f"iptables -I FORWARD {index} -s {client_ip} -j DROP")
 
         full_cmd = "\n".join(cmds)
         self._run_cmd(full_cmd)
@@ -113,7 +113,10 @@ class TierManager:
 
             # Add child class for user
             f"tc class replace dev {self.interface} parent 1:1 classid 1:{class_id} htb rate {speed}mbit",
-            f"tc filter replace dev {self.interface} protocol ip parent 1:0 prio 1 u32 match ip src {client_ip}/32 flowid 1:{class_id}"
+            # Shape download speed by matching destination IP on the wg/awg interface (egress to client)
+            f"tc filter add dev {self.interface} protocol ip parent 1:0 prio 1 u32 match ip dst {client_ip}/32 flowid 1:{class_id} 2>/dev/null || true",
+            # Replace filter doesn't work correctly without pref/handle, better to just remove and add or use true loop
+            f"tc filter replace dev {self.interface} protocol ip parent 1:0 prio 1 u32 match ip dst {client_ip}/32 flowid 1:{class_id}"
         ]
 
         self._run_cmd("\n".join(cmds))
@@ -123,6 +126,8 @@ class TierManager:
         class_id = last_octet
 
         cmds = [
+            f"tc filter del dev {self.interface} protocol ip parent 1:0 u32 match ip dst {client_ip}/32 2>/dev/null || true",
+            f"tc filter del dev {self.interface} protocol ip parent 1:0 prio 1 u32 match ip dst {client_ip}/32 2>/dev/null || true",
             f"tc filter del dev {self.interface} protocol ip parent 1:0 prio 1 u32 match ip src {client_ip}/32 2>/dev/null || true",
             f"tc class del dev {self.interface} parent 1:1 classid 1:{class_id} 2>/dev/null || true"
         ]
