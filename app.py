@@ -272,6 +272,27 @@ async def perform_mass_operations(delete_uids: List[str] = None, toggle_uids: Li
             for c, enabled in ops['toggle']:
                 manager = get_protocol_manager(ssh, c['protocol'])
                 await asyncio.to_thread(_manager_call, manager, 'toggle_client', c['protocol'], c['client_id'], enabled)
+
+                # Apply tier
+                if enabled and c['protocol'] in ('awg', 'awg2', 'awg_legacy', 'wireguard'):
+                    user = next((u for u in current_data.get('users', []) if u['id'] == c['user_id']), None)
+                    if user:
+                        tier = user.get('tier', 'free')
+                        try:
+                            from tier_manager import TierManager
+                            clients = await asyncio.to_thread(_manager_call, manager, 'get_clients', c['protocol'])
+                            client_ip = next((cl.get('address') for cl in clients if cl.get('clientId') == c['client_id']), None)
+                            if client_ip:
+                                if c['protocol'] == 'wireguard':
+                                    tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
+                                else:
+                                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                    container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
+                                    tm = TierManager(ssh, container, 'awg0')
+                                await asyncio.to_thread(tm.apply_tier, client_ip, tier)
+                        except Exception as e:
+                            logger.warning(f"Failed to apply tier on mass ops reconnect: {e}")
+
                 # Incremental toggle in data
                 async with DATA_LOCK:
                     current_data = load_data()
@@ -566,6 +587,8 @@ class AddUserRequest(BaseModel):
     protocol: Optional[str] = None
     connection_name: Optional[str] = None
     expiration_date: Optional[str] = None
+    tier: str = 'free'
+    tier_expires: Optional[str] = None
     telemt_quota: Optional[str] = None
     telemt_max_ips: Optional[int] = None
     telemt_expiry: Optional[str] = None
@@ -623,8 +646,12 @@ class UpdateUserRequest(BaseModel):
     traffic_reset_strategy: Optional[str] = None
     expiration_date: Optional[str] = None
     password: Optional[str] = None
+    tier: Optional[str] = None
+    tier_expires: Optional[str] = None
 
-
+class UpdateTierRequest(BaseModel):
+    tier: str
+    tier_expires: Optional[str] = None
 
 class SaveSettingsRequest(BaseModel):
     appearance: AppearanceSettings
@@ -849,6 +876,47 @@ async def periodic_background_tasks():
                                                 to_disable_uids.append(uid)
                                     except:
                                         pass
+
+                                # Check tier expiration date
+                                tier_exp_str = u.get('tier_expires')
+                                if tier_exp_str and u.get('tier') != 'free':
+                                    try:
+                                        tier_exp = datetime.fromisoformat(tier_exp_str)
+                                        if now > tier_exp:
+                                            logger.info(f"Tier expired for user {u['username']}, downgrading to free")
+                                            u['tier'] = 'free'
+                                            u['tier_expires'] = None
+
+                                            from tier_manager import TierManager
+                                            conns = [c for c in uc_list if c['user_id'] == uid and c['protocol'] in ('awg', 'awg2', 'awg_legacy', 'wireguard')]
+
+                                            for c in conns:
+                                                sid_conn = c['server_id']
+                                                if sid_conn >= len(data['servers']): continue
+                                                srv_conn = data['servers'][sid_conn]
+                                                ssh_conn = get_ssh(srv_conn)
+                                                await asyncio.to_thread(ssh_conn.connect)
+                                                mgr = get_protocol_manager(ssh_conn, c['protocol'])
+
+                                                if c['protocol'] == 'wireguard':
+                                                    cls = await asyncio.to_thread(_manager_call, mgr, 'get_clients', c['protocol'])
+                                                    client_ip = next((cl.get('address') for cl in cls if cl.get('clientId') == c['client_id']), None)
+                                                    if client_ip:
+                                                        tm = TierManager(ssh_conn, 'amnezia-wireguard', 'wg0')
+                                                        await asyncio.to_thread(tm.apply_tier, client_ip, 'free')
+                                                else:
+                                                    cls = await asyncio.to_thread(_manager_call, mgr, 'get_clients', c['protocol'])
+                                                    client_ip = next((cl.get('address') for cl in cls if cl.get('clientId') == c['client_id']), None)
+                                                    if client_ip:
+                                                        from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                                        container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
+                                                        tm = TierManager(ssh_conn, container, 'awg0')
+                                                        await asyncio.to_thread(tm.apply_tier, client_ip, 'free')
+
+                                                await asyncio.to_thread(ssh_conn.disconnect)
+
+                                    except Exception as e:
+                                        logger.warning(f"Error checking tier expiration for {u['username']}: {e}")
                     save_data(curr_data)
                     
             if to_disable_uids:
@@ -1003,6 +1071,151 @@ def _check_admin(request):
     if not user or user['role'] not in ('admin', 'support', 'helper'):
         return None
     return user
+
+
+@app.post('/api/users/{user_id}/tier')
+async def api_update_user_tier(request: Request, user_id: str, req: UpdateTierRequest):
+    if not _check_admin(request):
+        return JSONResponse({'error': 'Forbidden'}, status_code=403)
+    try:
+        from tier_manager import TIERS, TierManager
+        if req.tier not in TIERS:
+            return JSONResponse({'error': 'Invalid tier'}, status_code=400)
+
+        data = load_data()
+        user = next((u for u in data['users'] if u['id'] == user_id), None)
+        if not user:
+            return JSONResponse({'error': 'User not found'}, status_code=404)
+
+        old_tier = user.get('tier', 'free')
+        user['tier'] = req.tier
+        user['tier_expires'] = req.tier_expires or None
+
+        # Now apply to all active connections
+        conns = [c for c in data.get('user_connections', []) if c['user_id'] == user_id and c['protocol'] in ('awg', 'awg2', 'awg_legacy', 'wireguard')]
+
+        for c in conns:
+            sid = c['server_id']
+            if sid >= len(data['servers']):
+                continue
+            server = data['servers'][sid]
+            ssh = get_ssh(server)
+            await asyncio.to_thread(ssh.connect)
+
+            manager = get_protocol_manager(ssh, c['protocol'])
+
+            # Fetch client IP to apply rules
+            if c['protocol'] == 'wireguard':
+                clients = await asyncio.to_thread(_manager_call, manager, 'get_clients', c['protocol'])
+                # Find current client IP
+                client_ip = None
+                for cl in clients:
+                    if cl.get('clientId') == c['client_id']:
+                        client_ip = cl.get('address')
+                        break
+
+                if client_ip:
+                    container = 'amnezia-wireguard'
+                    interface = 'wg0'
+                    tm = TierManager(ssh, container, interface)
+                    await asyncio.to_thread(tm.apply_tier, client_ip, req.tier)
+            else:
+                clients = await asyncio.to_thread(_manager_call, manager, 'get_clients', c['protocol'])
+                client_ip = None
+                for cl in clients:
+                    if cl.get('clientId') == c['client_id']:
+                        client_ip = cl.get('address')
+                        break
+
+                if client_ip:
+                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                    container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
+                    interface = 'awg0'
+                    tm = TierManager(ssh, container, interface)
+                    await asyncio.to_thread(tm.apply_tier, client_ip, req.tier)
+
+            await asyncio.to_thread(ssh.disconnect)
+
+        save_data(data)
+
+        return {
+            "status": "success",
+            "old_tier": old_tier,
+            "new_tier": req.tier,
+            "connections_updated": len(conns),
+            "errors": []
+        }
+    except Exception as e:
+        logger.exception("Error updating tier")
+        return JSONResponse({'error': str(e)}, status_code=500)
+
+
+@app.get('/api/tiers')
+async def api_get_tiers(request: Request):
+    if not _check_admin(request):
+        return JSONResponse({'error': 'Forbidden'}, status_code=403)
+    try:
+        from tier_manager import TIERS
+        return {'tiers': TIERS}
+    except Exception as e:
+        logger.exception("Error getting tiers")
+        return JSONResponse({'error': str(e)}, status_code=500)
+
+
+@app.get('/api/users/{user_id}/tier/rules')
+async def api_get_tier_rules(request: Request, user_id: str):
+    if not _check_admin(request):
+        return JSONResponse({'error': 'Forbidden'}, status_code=403)
+    try:
+        from tier_manager import TierManager
+        data = load_data()
+        user = next((u for u in data['users'] if u['id'] == user_id), None)
+        if not user:
+            return JSONResponse({'error': 'User not found'}, status_code=404)
+
+        conns = [c for c in data.get('user_connections', []) if c['user_id'] == user_id and c['protocol'] in ('awg', 'awg2', 'awg_legacy', 'wireguard')]
+
+        rules = []
+        for c in conns:
+            sid = c['server_id']
+            if sid >= len(data['servers']):
+                continue
+            server = data['servers'][sid]
+            ssh = get_ssh(server)
+            await asyncio.to_thread(ssh.connect)
+
+            manager = get_protocol_manager(ssh, c['protocol'])
+            clients = await asyncio.to_thread(_manager_call, manager, 'get_clients', c['protocol'])
+            client_ip = None
+            for cl in clients:
+                if cl.get('clientId') == c['client_id']:
+                    client_ip = cl.get('address')
+                    break
+
+            if client_ip:
+                if c['protocol'] == 'wireguard':
+                    container = 'amnezia-wireguard'
+                    interface = 'wg0'
+                else:
+                    from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                    container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
+                    interface = 'awg0'
+
+                tm = TierManager(ssh, container, interface)
+                rule_info = await asyncio.to_thread(tm.get_rules_for_ip, client_ip)
+                rules.append({
+                    "connection_id": c['id'],
+                    "protocol": c['protocol'],
+                    "ip": client_ip,
+                    "rules": rule_info
+                })
+
+            await asyncio.to_thread(ssh.disconnect)
+
+        return {'status': 'success', 'connection_rules': rules}
+    except Exception as e:
+        logger.exception("Error getting rules")
+        return JSONResponse({'error': str(e)}, status_code=500)
 
 
 @app.post('/api/servers/add')
@@ -1439,21 +1652,18 @@ async def api_get_connections(request: Request, server_id: int, protocol: str = 
         clients = _manager_call(manager, 'get_clients', protocol)
         ssh.disconnect()
 
-        # Enrich with user info from user_connections
-        user_conns = data.get('user_connections', [])
-        users = data.get('users', [])
-        users_map = {u['id']: u for u in users}
-        for client in clients:
-            cid = client.get('clientId', '')
-            for uc in user_conns:
-                if uc.get('client_id') == cid and uc.get('server_id') == server_id and uc.get('protocol') == protocol:
-                    uid = uc.get('user_id')
-                    u = users_map.get(uid)
-                    if u:
-                        client['assigned_user'] = u['username']
-                        client['assigned_user_id'] = uid
-                    break
-        return {'clients': clients}
+        # Enrich: only show clients that are not assigned to anyone in the panel
+        assigned_ids = {c['client_id'] for c in data.get('user_connections', []) if c['server_id'] == server_id and c['protocol'] == protocol}
+
+        filtered = []
+        for c in clients:
+            if c['clientId'] not in assigned_ids:
+                filtered.append({
+                    'id': c['clientId'],
+                    'name': c.get('userData', {}).get('clientName', 'Unnamed')
+                })
+
+        return {'clients': filtered}
     except Exception as e:
         logger.exception("Error getting connections")
         return JSONResponse({'error': str(e)}, status_code=500)
@@ -1488,6 +1698,27 @@ async def api_add_connection(request: Request, server_id: int, req: AddConnectio
             result = manager.add_client(req.name, server['host'])
         else:
             result = manager.add_client(req.protocol, req.name, server['host'], port)
+
+        if req.user_id and result.get('client_id') and req.protocol in ('awg', 'awg2', 'awg_legacy', 'wireguard'):
+            user = next((u for u in data.get('users', []) if u['id'] == req.user_id), None)
+            if user:
+                tier = user.get('tier', 'free')
+                if tier != 'free':
+                    try:
+                        from tier_manager import TierManager
+                        clients = _manager_call(manager, 'get_clients', req.protocol)
+                        client_ip = next((cl.get('address') for cl in clients if cl.get('clientId') == result['client_id']), None)
+                        if client_ip:
+                            if req.protocol == 'wireguard':
+                                tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
+                            else:
+                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
+                                tm = TierManager(ssh, container, 'awg0')
+                            tm.apply_tier(client_ip, tier)
+                    except Exception as e:
+                        logger.warning(f"Failed to apply tier {tier} for new connection {result['client_id']}: {e}")
+
         ssh.disconnect()
 
         if result.get('config'):
@@ -1624,6 +1855,28 @@ async def api_toggle_connection(request: Request, server_id: int, req: ToggleCon
         ssh.connect()
         manager = get_protocol_manager(ssh, req.protocol)
         _manager_call(manager, 'toggle_client', req.protocol, req.client_id, req.enable)
+
+        if req.enable and req.protocol in ('awg', 'awg2', 'awg_legacy', 'wireguard'):
+            conn = next((c for c in data.get('user_connections', []) if c['client_id'] == req.client_id and c['server_id'] == server_id), None)
+            if conn:
+                user = next((u for u in data.get('users', []) if u['id'] == conn['user_id']), None)
+                if user:
+                    tier = user.get('tier', 'free')
+                    try:
+                        from tier_manager import TierManager
+                        clients = _manager_call(manager, 'get_clients', req.protocol)
+                        client_ip = next((cl.get('address') for cl in clients if cl.get('clientId') == req.client_id), None)
+                        if client_ip:
+                            if req.protocol == 'wireguard':
+                                tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
+                            else:
+                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
+                                tm = TierManager(ssh, container, 'awg0')
+                            tm.apply_tier(client_ip, tier)
+                    except Exception as e:
+                        logger.warning(f"Failed to apply tier on reconnect: {e}")
+
         ssh.disconnect()
         status = 'enabled' if req.enable else 'disabled'
         return {'status': 'success', 'enabled': req.enable, 'message': f'Connection {status}'}
@@ -1687,7 +1940,8 @@ async def api_list_users(request: Request, search: str = '', page: int = 1, size
             'share_enabled': u.get('share_enabled', False),
             'share_token': u.get('share_token'),
             'has_share_password': bool(u.get('share_password_hash')),
-            'source': 'Remnawave' if u.get('remnawave_uuid') else 'Local'
+            'source': 'Remnawave' if u.get('remnawave_uuid') else 'Local',
+            'tier': u.get('tier', 'free')
         })
     return {
         'users': users,
@@ -1731,6 +1985,8 @@ async def api_add_user(request: Request, req: AddUserRequest):
             'share_enabled': False,
             'share_token': secrets.token_urlsafe(16),
             'share_password_hash': None,
+            'tier': req.tier or 'free',
+            'tier_expires': req.tier_expires,
         }
         data['users'].append(new_user)
         save_data(data)
@@ -1797,7 +2053,7 @@ async def api_update_user(request: Request, user_id: str, req: UpdateUserRequest
         if req.telegramId is not None: user['telegramId'] = req.telegramId
         if req.email is not None: user['email'] = req.email
         if req.description is not None: user['description'] = req.description
-        if req.traffic_limit is not None: 
+        if req.traffic_limit is not None:
             new_limit = int(req.traffic_limit * 1024**3)
             user['traffic_limit'] = new_limit
         
@@ -1810,11 +2066,39 @@ async def api_update_user(request: Request, user_id: str, req: UpdateUserRequest
 
         if req.password:
             user['password_hash'] = hash_password(req.password)
-            
+
+        if req.tier is not None:
+            user['tier'] = req.tier
+            user['tier_expires'] = req.tier_expires or None
+            try:
+                from tier_manager import TierManager
+                conns = [c for c in data.get('user_connections', []) if c['user_id'] == user_id and c['protocol'] in ('awg', 'awg2', 'awg_legacy', 'wireguard')]
+                for c in conns:
+                    sid = c['server_id']
+                    if sid >= len(data['servers']): continue
+                    server = data['servers'][sid]
+                    ssh = get_ssh(server)
+                    await asyncio.to_thread(ssh.connect)
+                    manager = get_protocol_manager(ssh, c['protocol'])
+                    clients = await asyncio.to_thread(_manager_call, manager, 'get_clients', c['protocol'])
+                    client_ip = next((cl.get('address') for cl in clients if cl.get('clientId') == c['client_id']), None)
+                    if client_ip:
+                        if c['protocol'] == 'wireguard':
+                            tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
+                        else:
+                            from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                            container = AWG_CONTAINER_NAMES.get(c['protocol'], f'amnezia-{c["protocol"].replace("_", "-")}')
+                            tm = TierManager(ssh, container, 'awg0')
+                        await asyncio.to_thread(tm.apply_tier, client_ip, req.tier)
+                    await asyncio.to_thread(ssh.disconnect)
+            except Exception as e:
+                logger.warning(f"Error applying tier to existing connections: {e}")
+
         save_data(data)
         
         # Auto re-enable if traffic limit increased beyond usage
         if req.traffic_limit is not None:
+            new_limit = int(req.traffic_limit * 1024**3)
             if new_limit > 0 and user.get('traffic_used', 0) < new_limit and not user.get('enabled', True):
                 await perform_toggle_user(data, user_id, True)
                 save_data(data)
@@ -1898,30 +2182,51 @@ async def api_add_user_connection(request: Request, user_id: str, req: AddUserCo
                     user_ad_tag=req.telemt_ad_tag,
                     max_tcp_conns=req.telemt_max_conns
                 )
+            elif req.protocol == 'wireguard':
+                result = manager.add_client(req.name, server['host'])
             else:
-                result = await asyncio.to_thread(manager.add_client, req.protocol, req.name, server['host'], port)
-        
-        await asyncio.to_thread(ssh.disconnect)
+                result = manager.add_client(req.protocol, req.name, server['host'], port)
 
-        if result.get('client_id'):
+        if req.user_id and result.get('client_id') and req.protocol in ('awg', 'awg2', 'awg_legacy', 'wireguard'):
+            user = next((u for u in data.get('users', []) if u['id'] == req.user_id), None)
+            if user:
+                tier = user.get('tier', 'free')
+                if tier != 'free':
+                    try:
+                        from tier_manager import TierManager
+                        clients = _manager_call(manager, 'get_clients', req.protocol)
+                        client_ip = next((cl.get('address') for cl in clients if cl.get('clientId') == result['client_id']), None)
+                        if client_ip:
+                            if req.protocol == 'wireguard':
+                                tm = TierManager(ssh, 'amnezia-wireguard', 'wg0')
+                            else:
+                                from awg_manager import CONTAINER_NAMES as AWG_CONTAINER_NAMES
+                                container = AWG_CONTAINER_NAMES.get(req.protocol, f'amnezia-{req.protocol.replace("_", "-")}')
+                                tm = TierManager(ssh, container, 'awg0')
+                            tm.apply_tier(client_ip, tier)
+                    except Exception as e:
+                        logger.warning(f"Failed to apply tier {tier} for new connection {result['client_id']}: {e}")
+
+        ssh.disconnect()
+
+        if result.get('config'):
+            result['vpn_link'] = generate_vpn_link(result['config'])
+
+        # Link connection to user if specified
+        if req.user_id and result.get('client_id'):
             conn = {
                 'id': str(uuid.uuid4()),
-                'user_id': user_id,
-                'server_id': req.server_id,
+                'user_id': req.user_id,
+                'server_id': server_id,
                 'protocol': req.protocol,
                 'client_id': result['client_id'],
                 'name': req.name,
                 'created_at': datetime.now().isoformat(),
             }
-            data = load_data()
             data['user_connections'].append(conn)
             save_data(data)
 
-        resp = {'status': 'success'}
-        if result.get('config'):
-            resp['config'] = result['config']
-            resp['vpn_link'] = generate_vpn_link(result['config'])
-        return resp
+        return result
     except Exception as e:
         logger.exception("Error adding user connection")
         return JSONResponse({'error': str(e)}, status_code=500)
@@ -1953,6 +2258,7 @@ async def api_my_connections(request: Request):
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     data = load_data()
     conns = [c for c in data.get('user_connections', []) if c['user_id'] == user['id']]
+    # Enrich with server names
     for c in conns:
         sid = c.get('server_id', 0)
         if sid < len(data['servers']):
