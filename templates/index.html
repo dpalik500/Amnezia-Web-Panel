@@ -7,9 +7,11 @@
             <span class="icon">🖥</span>
             {{ _('nav_servers') }}
         </h1>
+        {% if current_user == 'admin' %}
         <button class="btn btn-primary" onclick="openModal('addServerModal')">
             <span>＋</span> {{ _('add_server') }}
         </button>
+        {% endif %}
     </div>
 
     {% if servers %}
