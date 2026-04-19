@@ -68,6 +68,7 @@
             <div class="form-group">
                 <label class="form-label">{{ _('password_label') }}</label>
                 <input class="form-input" type="password" id="newPassword" placeholder="••••••••" required>
+                <button type="button" class="btn btn-secondary" id='genPasBtn' onclick='insertPassword()'>🔀</button>
             </div>
 
             <div class="form-group">
@@ -180,7 +181,8 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('addUserModal')">{{ _('cancel')
                     }}</button>
-                <button type="submit" class="btn btn-primary" id="addUserBtn">
+                <button type="button" class="btn btn-icon" id="copyDsMsg" onclick="copyDsMessage()">📝</button>
+                <button type="submit" class="btn btn-primary" id="addUserBtn" disabled>
                     <span id="addUserBtnText">{{ _('create') }}</span>
                     <div class="spinner hidden" id="addUserSpinner"></div>
                 </button>
@@ -397,6 +399,51 @@
 
     const serversData = {{ servers | tojson }};
 
+    function generatePassword(length, includeUppercase, includeNumbers, includeSymbols) {
+          const lowercaseChars = "abcdefghijklmnopqrstuvwxyz";
+          const uppercaseChars = includeUppercase ? lowercaseChars.toUpperCase() : "";
+          const numbers = includeNumbers ? "0123456789" : "";
+          const symbols = includeSymbols ? "!@#$%^&*()_+-=[]{}|;':\"\\,.<>/?`~" : "";
+          const allChars = lowercaseChars + uppercaseChars + numbers + symbols;
+
+          let password = "";
+          for (let i = 0; i < length; i++) {
+            const randomIndex = Math.floor(Math.random() * allChars.length);
+            password += allChars.charAt(randomIndex);
+          }
+
+          return password;
+    }
+
+    function insertPassword() {
+        const password = generatePassword(12, true, true, false)
+
+        document.getElementById('newPassword').value = password
+        showToast(_('success'), 'info');
+    }
+
+    function copyDsMessage() {
+
+        let username = document.getElementById('newUsername').value
+        let password = document.getElementById('newPassword').value
+
+        const discordMessage = [
+            `## 👤Новый пользователь создан`,
+            `# **Логин:** \`${username}\``,
+            `# **Пароль:** \`${password}\`\n`,
+            `⚙️ Инструкция для подключения --> [Шо-то](https://discord.com/channels/1139539257485176882/1361742173091135518/1495276023384637571)`,
+        ].join('\n');
+
+        navigator.clipboard.writeText(discordMessage)
+        showToast(_('success'), 'info');
+        const create_btn = document.getElementById('addUserBtn')
+        create_btn.disabled = false
+
+    }
+
+
+
+
     function handleSearch(val) {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -530,6 +577,8 @@
             container.classList.remove('hidden');
         } catch (err) {
             showToast(`${_('error')}: ` + err.message, 'error');
+        } finally {
+            loading.classList.add('hidden');
         }
     }
 
