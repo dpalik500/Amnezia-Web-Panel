@@ -431,7 +431,7 @@
             `## 👤Новый пользователь создан`,
             `# **Логин:** \`${username}\``,
             `# **Пароль:** \`${password}\`\n`,
-            `⚙️ Инструкция для подключения --> [Панель управления](https://vpn-just.tolearn.online/)`,
+            `⚙️ Инструкция для подключения --> [Панель управления](https://vpn-just-zone.tolearn.online/)`,
         ].join('\n');
 
         navigator.clipboard.writeText(discordMessage)
@@ -972,7 +972,8 @@
         document.getElementById('editUserLimit').value = data.limit || '0';
         document.getElementById('editUserTrafficResetStrategy').value = data.strategy || 'never';
         document.getElementById('editUserExpiration').value = data.expiration || '';
-        document.getElementById('editUserPass').value = '';
+        const editUserPass = document.getElementById('editUserPass');
+        if (editUserPass) editUserPass.value = '';
         openModal('editUserModal');
     }
 
@@ -989,7 +990,7 @@
             traffic_limit: parseFloat(document.getElementById('editUserLimit').value || '0'),
             traffic_reset_strategy: document.getElementById('editUserTrafficResetStrategy').value,
             expiration_date: document.getElementById('editUserExpiration').value || null,
-            password: document.getElementById('editUserPass').value || null
+            password: document.getElementById('editUserPass')?.value || null
         };
 
         btn.disabled = true;
