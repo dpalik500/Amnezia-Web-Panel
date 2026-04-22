@@ -253,5 +253,11 @@
     "clear_server": "Réinitialiser le serveur",
     "remove_server": "Retirer le serveur du panneau",
     "telemt_desc": "Proxy Telegram basé sur MTProxy avec obfuscation avancée.",
-    "dns_desc": "Serveur DNS personnel pour bloquer les publicités et protéger la vie privée."
+    "dns_desc": "Serveur DNS personnel pour bloquer les publicités et protéger la vie privée.",
+    "day_motivation": "Motivation du jour",
+    "account_stats_title": "Statut du compte",
+    "account_expiry_label": "Date d'expiration",
+    "account_traffic_label": "Trafic utilisé",
+    "account_traffic_remaining": "Restant",
+    "gb": "Go"
 }

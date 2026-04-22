@@ -285,5 +285,11 @@
     "checking_updates": "Проверка...",
     "update_available": "Доступна новая версия",
     "download_update": "Скачать обновление",
-    "up_to_date": "У вас установлена последняя версия"
+    "up_to_date": "У вас установлена последняя версия",
+    "day_motivation": "Мотивация дня",
+    "account_stats_title": "Статус аккаунта",
+    "account_expiry_label": "Срок действия",
+    "account_traffic_label": "Использовано трафика",
+    "account_traffic_remaining": "Осталось",
+    "gb": "ГБ"
 }

@@ -951,7 +951,11 @@ async def my_connections_page(request: Request):
             c['server_name'] = data['servers'][sid].get('name', data['servers'][sid].get('host', ''))
         else:
             c['server_name'] = 'Unknown'
-    return tpl(request, 'my_connections.html', connections=conns)
+    user_data = next((u for u in data.get('users', []) if u['id'] == user['id']), {})
+    return tpl(request, 'my_connections.html', connections=conns,
+               user_expiration=user_data.get('expiration_date'),
+               traffic_used=user_data.get('traffic_used', 0),
+               traffic_limit=user_data.get('traffic_limit', 0))
 
 
 # ======================== AUTH API ========================

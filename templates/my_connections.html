@@ -72,8 +72,45 @@
     </h1>
 
     <button class="btn btn-primary motivation-trigger" onclick="openMotivationPopup()">
-        <span>🔥</span> Мотивация дня
+        <span>🔥</span> {{ _('day_motivation') }}
     </button>
+
+    {# ===== Account stats card ===== #}
+    {% set has_expiry = user_expiration and user_expiration != '' %}
+    {% set has_limit = traffic_limit and traffic_limit > 0 %}
+    {% if has_expiry or has_limit %}
+    <div class="info-card" style="margin-top: 1.5rem; background: var(--bg-card); padding: 1.25rem 1.5rem; border-radius: var(--radius-md); border-left: 4px solid var(--primary-color); box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+        <h2 style="font-size: 1.05rem; margin-bottom: 1rem; color: var(--text-primary);">
+            <span class="icon">📊</span> {{ _('account_stats_title') }}
+        </h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+            {% if has_expiry %}
+            <div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">{{ _('account_expiry_label') }}</div>
+                <div style="font-weight: 600; color: var(--text-primary);">📅 {{ user_expiration[:10] }}</div>
+            </div>
+            {% endif %}
+            {% if has_limit %}
+            {% set used_gb = (traffic_used / 1073741824) | round(2) %}
+            {% set limit_gb = (traffic_limit / 1073741824) | round(2) %}
+            {% set pct = [[((traffic_used / traffic_limit) * 100) | int, 0] | max, 100] | min %}
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">
+                    {{ _('account_traffic_label') }}:
+                    <b>{{ used_gb }} {{ _('gb') }}</b> / {{ limit_gb }} {{ _('gb') }}
+                    <span style="float:right; color: {% if pct >= 90 %}#ef4444{% elif pct >= 70 %}#f59e0b{% else %}var(--primary-color){% endif %};">{{ pct }}%</span>
+                </div>
+                <div style="background: var(--bg-input, #374151); border-radius: 4px; height: 8px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ pct }}%; background: {% if pct >= 90 %}#ef4444{% elif pct >= 70 %}#f59e0b{% else %}var(--primary-color){% endif %}; border-radius: 4px; transition: width 0.4s;"></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;">
+                    {{ _('account_traffic_remaining') }}: <b>{{ [[limit_gb - used_gb, 0] | max, limit_gb] | min | round(2) }} {{ _('gb') }}</b>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     {% if connections %}
     <div class="clients-list" id="myConnectionsList">
