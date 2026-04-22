@@ -254,6 +254,13 @@
     "remove_server": "حذف سرور از پنل",
     "telemt_desc": "پروکسی تلگرام بر پایه‌ی MTProxy با پوشش‌های پیشرفته.",
     "dns_desc": "سرور DNS شخصی برای مسدود کردن تبلیغات و حفظ حریم خصوصی.",
+    "day_motivation": "انگیزه های روز",
+    "account_stats_title": "وضعیت حساب",
+    "account_expiry_label": "تاریخ انقضا",
+    "account_traffic_label": "ترافیک مصرفی",
+    "account_traffic_remaining": "باقی‌مانده",
+    "gb": "گیگابایت"
+    "dns_desc": "سرور DNS شخصی برای مسدود کردن تبلیغات و حفظ حریم خصوصی.",
     "dns_internal_hint": "The service runs on the internal network (172.29.172.254) without binding to host ports.",
     "telemt_port_hint": "Port for the Telegram proxy (typically 443).",
     "socks5_desc": "Single-account SOCKS5 proxy (3proxy) with username/password authentication.",

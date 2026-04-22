@@ -428,10 +428,11 @@
         let password = document.getElementById('newPassword').value
 
         const discordMessage = [
-            `## 👤Новый пользователь создан`,
+            `## 👤Данные для входа`,
             `# **Логин:** \`${username}\``,
             `# **Пароль:** \`${password}\`\n`,
-            `⚙️ Инструкция для подключения --> [Панель управления](https://vpn-just-zone.tolearn.online/)`,
+            `⚙️ Инструкция для подключения --> [Панель управления](https://vpn-just-zone.tolearn.online/)\n\n`,
+            `‼️** В бесплатном тарифе Вам выдается 10ГБ трафика в сутки. Не рекомендуется вести демонстрацию экрана или использовать сторонние приложения (кроме Discord) во время игры на сервере.**`,
         ].join('\n');
 
         navigator.clipboard.writeText(discordMessage)
