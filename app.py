@@ -199,6 +199,29 @@ async def perform_delete_user(data: dict, user_id: str):
 
     return True
 
+async def perform_toggle_user(data: dict, user_id: str, enable: bool) -> bool:
+    user = next((u for u in data['users'] if u['id'] == user_id), None)
+    if not user:
+        return False
+
+    user['enabled'] = True if user['enabled'] == False else False
+
+    user_connections = [c for c in data.get('user_connections', []) if c['user_id'] == user_id]
+    for uc in user_connections:
+        try:
+            sid = uc['server_id']
+            if sid >= len(data['servers']):
+                continue
+
+            server = data['servers'][sid]
+            ssh = get_ssh(server)
+            manager = get_protocol_manager(ssh, uc['protocol'])
+            _manager_call(manager, 'toggle_client', uc['protocol'], uc['client_id'])
+            ssh.disconnect()
+        except Exception as e:
+            logger.warning(f'Failed to toggle connection {uc['client_id']} during user toggle: {e}"')
+
+    return True
 
 async def perform_mass_operations(delete_uids: List[str] = None, toggle_uids: List[tuple] = None, create_conns: List[dict] = None):
     """
