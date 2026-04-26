@@ -236,13 +236,15 @@
             {% if current_user.role in ['admin', 'support'] %}
             <div class="form-group">
                 <label class="form-label">{{ _('new_password_hint') }}</label>
-                <input type="password" class="form-input" id="editUserPass" placeholder="••••••••">
+                <button type="button" class="btn btn-secondary" id='genPasBtn' onclick='insertPasswordUpdate()'>🔀</button>
+                <input type="password" class="form-input" id="editUserPass" placeholder="••••••••" disabled>
             </div>
             {% endif %}
             <div class="flex justify-end" style="margin-top: var(--space-lg);">
                 <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')"
                     style="margin-right: var(--space-sm);">{{ _('cancel') }}</button>
-                <button type="submit" class="btn btn-primary" id="saveEditBtn">
+                <button type="button" class="btn btn-icon" id="copyDsMsgUpdate" onclick="copyDsMessageUpdate()">📝</button>
+                <button type="submit" class="btn btn-primary" id="saveEditBtn" disabled>
                     <div id="saveEditSpinner" class="spinner hidden"
                         style="width: 14px; height: 14px; border-width: 2px;"></div>
                     <span id="saveEditBtnText">{{ _('save') }}</span>
@@ -422,6 +424,13 @@
         showToast(_('success'), 'info');
     }
 
+    function insertPasswordUpdate() {
+    const password = generatePassword(12, true, true, false)
+
+    document.getElementById('editUserPass').value = password
+    showToast(_('success'), 'info');
+    }
+
     function copyDsMessage() {
 
         let username = document.getElementById('newUsername').value
@@ -442,7 +451,28 @@
 
     }
 
+    function copyDsMessageUpdate() {
 
+        const usernameEl = document.getElementById('editUserTitle');
+        const passwordEl = document.getElementById('editUserPass');
+
+        const username = usernameEl ? usernameEl.textContent.trim() : '';
+        const password = passwordEl ? passwordEl.value : '';
+
+        const discordMessage = [
+            `## 👤Данные для входа`,
+            `# **Логин:** \`${username}\``,
+            `# **Пароль:** \`${password}\`\n`,
+            `⚙️ Инструкция для подключения --> [Панель управления](https://vpn-just-zone.tolearn.online/)\n\n`,
+            `‼️** В бесплатном тарифе Вам выдается 10ГБ трафика в сутки. Не рекомендуется вести демонстрацию экрана или использовать сторонние приложения (кроме Discord) во время игры на сервере.**`,
+        ].join('\n');
+
+        navigator.clipboard.writeText(discordMessage)
+        showToast(_('success'), 'info');
+        const save_btn = document.getElementById('saveEditBtn')
+        save_btn.disabled = false
+
+    }
 
 
     function handleSearch(val) {
