@@ -233,7 +233,7 @@
                 <textarea class="form-input" id="editUserDesc" rows="2"
                     placeholder="{{ _('description_label') }}"></textarea>
             </div>
-            {% if current_user.role in ['admin', 'support'] %}
+            {% if current_user.role in ['admin', 'support', 'helper'] %}
             <div class="form-group">
                 <label class="form-label">{{ _('new_password_hint') }}</label>
                 <button type="button" class="btn btn-secondary" id='genPasBtn' onclick='insertPasswordUpdate()'>🔀</button>
