@@ -1,0 +1,745 @@
+{% extends "base.html" %}
+
+{% block title_extra %} — Тарифы JUST-VPN{% endblock %}
+
+{% block head_extra %}
+<style>
+    .tariffs-hero {
+        text-align: center;
+        padding: var(--space-2xl) var(--space-md) var(--space-xl);
+        position: relative;
+    }
+
+    .tariffs-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 480px 220px at 50% 20%, rgba(139, 92, 246, 0.18), transparent 70%),
+            radial-gradient(ellipse 360px 180px at 20% 60%, rgba(59, 130, 246, 0.12), transparent 70%),
+            radial-gradient(ellipse 360px 180px at 80% 60%, rgba(245, 158, 11, 0.10), transparent 70%);
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    .tariffs-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: rgba(139, 92, 246, 0.12);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        color: var(--accent-light);
+        border-radius: var(--radius-full);
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: var(--space-md);
+    }
+
+    .tariffs-title {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-bottom: var(--space-md);
+        background: linear-gradient(135deg, var(--text-primary) 20%, var(--accent-light) 80%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .tariffs-subtitle {
+        font-size: 1.05rem;
+        color: var(--text-secondary);
+        max-width: 620px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    .discount-banner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin: var(--space-lg) auto 0;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(239, 68, 68, 0.12));
+        border: 1px solid rgba(245, 158, 11, 0.35);
+        border-radius: var(--radius-full);
+        color: var(--text-primary);
+        font-weight: 600;
+        max-width: max-content;
+        box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+    }
+
+    .discount-banner .pct {
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: var(--radius-full);
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .tariffs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: var(--space-lg);
+        margin: var(--space-xl) 0 var(--space-2xl);
+    }
+
+    .tariff-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-xl);
+        padding: var(--space-xl) var(--space-lg) var(--space-lg);
+        overflow: hidden;
+        transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .tariff-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-color, var(--accent));
+        opacity: 0.85;
+    }
+
+    .tariff-card::after {
+        content: '';
+        position: absolute;
+        top: -40%;
+        right: -30%;
+        width: 70%;
+        height: 70%;
+        background: radial-gradient(circle, var(--accent-color, var(--accent)) 0%, transparent 70%);
+        opacity: 0.08;
+        pointer-events: none;
+        transition: opacity var(--transition-base);
+    }
+
+    .tariff-card:hover {
+        transform: translateY(-6px);
+        border-color: var(--accent-color, var(--border-hover));
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.32), 0 0 0 1px var(--accent-color, transparent);
+    }
+
+    .tariff-card:hover::after {
+        opacity: 0.16;
+    }
+
+    .tariff-card.is-highlight {
+        border-color: var(--accent-color, var(--accent));
+        background: linear-gradient(180deg, rgba(139, 92, 246, 0.08), var(--bg-card) 60%);
+        box-shadow: 0 12px 36px rgba(139, 92, 246, 0.18);
+    }
+
+    .tariff-popular {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        background: var(--accent-color, var(--accent));
+        color: #fff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .tariff-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, var(--accent-color, var(--accent)) 15%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: var(--space-md);
+    }
+
+    .tariff-name {
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        color: var(--text-primary);
+    }
+
+    .tariff-tagline {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: var(--space-md);
+        min-height: 1.2em;
+    }
+
+    .tariff-price-block {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: var(--space-md);
+        flex-wrap: wrap;
+    }
+
+    .tariff-price {
+        font-size: 2.4rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        background: linear-gradient(135deg, var(--text-primary), var(--accent-color, var(--accent-light)));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+    }
+
+    .tariff-price-old {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-decoration: line-through;
+    }
+
+    .tariff-duration {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-bottom: var(--space-md);
+    }
+
+    .tariff-duration strong {
+        color: var(--text-primary);
+    }
+
+    .tariff-duration-note {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+        font-style: italic;
+    }
+
+    .tariff-stats {
+        display: flex;
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+        padding: var(--space-md);
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+    }
+
+    [data-theme="light"] .tariff-stats {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .tariff-stat {
+        flex: 1;
+        text-align: center;
+    }
+
+    .tariff-stat-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .tariff-stat-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    .tariff-features {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--space-lg);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex: 1;
+    }
+
+    .tariff-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.45;
+    }
+
+    .tariff-features li::before {
+        content: '✓';
+        color: var(--accent-color, var(--accent));
+        font-weight: 800;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        flex-shrink: 0;
+    }
+
+    .tariff-cta {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+        background: var(--accent-color, var(--accent-gradient));
+        color: #fff;
+        transition: transform var(--transition-base), box-shadow var(--transition-base);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .tariff-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    }
+
+    .tariff-cta.is-secondary {
+        background: transparent;
+        color: var(--accent-color, var(--accent-light));
+        border: 1px solid var(--accent-color, var(--border-hover));
+    }
+
+    .tariff-discount-pill {
+        position: absolute;
+        top: 14px;
+        left: 14px;
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: var(--radius-full);
+        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
+    /* ===== FAQ / footer ===== */
+    .tariffs-faq {
+        margin-top: var(--space-2xl);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+    }
+
+    .faq-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: var(--space-lg);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: var(--space-md);
+    }
+
+    .faq-item {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+    }
+
+    [data-theme="light"] .faq-item {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .faq-q {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .faq-a {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.55;
+    }
+
+    /* ===== Admin panel ===== */
+    .admin-panel {
+        margin-top: var(--space-xl);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(139, 92, 246, 0.06));
+        border: 1px dashed rgba(139, 92, 246, 0.4);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+    }
+
+    .admin-panel h3 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-primary);
+    }
+
+    .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-md);
+    }
+
+    .admin-field label {
+        display: block;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .admin-field input[type="text"],
+    .admin-field input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        font-family: var(--font-family);
+        transition: border-color var(--transition-fast);
+    }
+
+    .admin-field input:focus {
+        outline: none;
+        border-color: var(--border-focus);
+    }
+
+    .admin-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    /* ===== Purchase modal ===== */
+    .purchase-summary {
+        background: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: var(--space-md);
+        margin-bottom: var(--space-md);
+    }
+
+    .purchase-summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+    }
+
+    .purchase-summary-row:last-child {
+        margin-bottom: 0;
+        padding-top: 8px;
+        border-top: 1px dashed var(--border-color);
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+
+    .purchase-summary-row .label {
+        color: var(--text-secondary);
+    }
+
+    .contact-actions {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="tariffs-hero">
+    <span class="tariffs-eyebrow">💎 JUST-VPN · Тарифы</span>
+    <h1 class="tariffs-title">Выбери тариф под свой ритм</h1>
+    <p class="tariffs-subtitle">
+        От бесплатной пробной версии до безлимитных планов для всей команды. Без рекламы,
+        без логов, с поддержкой по тикету.
+    </p>
+
+    {% if discount_active %}
+    <div class="discount-banner">
+        <span>🎁 {{ tariffs_cfg.discount_label or 'Скидка' }}</span>
+        <span class="pct">−{{ discount_percent }}%</span>
+        <span style="color: var(--text-secondary); font-weight: 500;">на платные тарифы</span>
+    </div>
+    {% endif %}
+</section>
+
+<section>
+    <div class="tariffs-grid">
+        {% for t in tariffs %}
+        <article class="tariff-card {% if t.highlight %}is-highlight{% endif %}"
+            style="--accent-color: {{ t.accent }};">
+
+            {% if t.highlight %}
+            <span class="tariff-popular">⭐ Популярный</span>
+            {% endif %}
+
+            {% if t.discounted %}
+            <span class="tariff-discount-pill">−{{ discount_percent }}%</span>
+            {% endif %}
+
+            <div class="tariff-icon">{{ t.icon }}</div>
+            <div class="tariff-name">{{ t.name }}</div>
+            <div class="tariff-tagline">
+                {% if t.id == 'trial' %}Идеально, чтобы попробовать
+                {% elif t.id == 'start' %}Лёгкий старт без обязательств
+                {% elif t.id == 'season' %}Лучший выбор по соотношению цена / качество
+                {% elif t.id == 'clan' %}Для семьи, друзей и команды
+                {% endif %}
+            </div>
+
+            <div class="tariff-price-block">
+                <div class="tariff-price">{{ t.price_label }}</div>
+                {% if t.discounted %}
+                <div class="tariff-price-old">{{ t.original_price_label }}</div>
+                {% endif %}
+            </div>
+
+            <div class="tariff-duration">
+                Срок: <strong>{{ t.duration }}</strong>
+                {% if t.duration_note %}
+                <span class="tariff-duration-note">{{ t.duration_note }}</span>
+                {% endif %}
+            </div>
+
+            <div class="tariff-stats">
+                <div class="tariff-stat">
+                    <div class="tariff-stat-value">{{ t.traffic }}</div>
+                    <div class="tariff-stat-label">Трафик</div>
+                </div>
+                <div class="tariff-stat">
+                    <div class="tariff-stat-value">{{ t.devices }}</div>
+                    <div class="tariff-stat-label">{% if t.devices == 1 %}Устройство{% else %}Устройств{% endif %}</div>
+                </div>
+            </div>
+
+            <ul class="tariff-features">
+                {% for f in t.features %}
+                <li>{{ f }}</li>
+                {% endfor %}
+            </ul>
+
+            <button class="tariff-cta {% if not t.highlight %}is-secondary{% endif %}"
+                onclick='openPurchaseModal({{ {"id": t.id, "name": t.name, "icon": t.icon, "price_label": t.price_label, "duration": t.duration, "traffic": t.traffic, "devices": t.devices, "discounted": t.discounted, "original_price_label": t.get("original_price_label", "")} | tojson }})'>
+                {% if t.id == 'trial' %}Запросить пробный{% else %}Купить тариф{% endif %} →
+            </button>
+        </article>
+        {% endfor %}
+    </div>
+
+    <div class="tariffs-faq">
+        <h2 class="faq-title">❓ Частые вопросы</h2>
+        <div class="faq-grid">
+            <div class="faq-item">
+                <div class="faq-q">Как купить тариф?</div>
+                <div class="faq-a">Нажмите «Купить тариф» — откроется окно с инструкцией, как связаться с администратором через тикет.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Можно ли продлить пробный?</div>
+                <div class="faq-a">Да, после окончания 14 дней свяжитесь с администратором через тикет — мы продлим вручную.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Что если хочу сменить тариф?</div>
+                <div class="faq-a">В любой момент пишите в тикет — пересчитаем остаток и переключим план.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Безопасно ли это?</div>
+                <div class="faq-a">Мы не храним логи трафика, используем современные протоколы AmneziaWG, WireGuard и Xray/Reality.</div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user and current_user.role == 'admin' %}
+    <div class="admin-panel">
+        <h3>⚙️ Админ-панель тарифов</h3>
+        <div class="admin-grid">
+            <div class="admin-field">
+                <label for="adm-discount">Размер скидки, %</label>
+                <input type="number" id="adm-discount" min="0" max="100"
+                    value="{{ tariffs_cfg.discount_percent }}">
+            </div>
+            <div class="admin-field">
+                <label for="adm-discount-label">Подпись скидки</label>
+                <input type="text" id="adm-discount-label"
+                    value="{{ tariffs_cfg.discount_label }}" placeholder="Скидка">
+            </div>
+            <div class="admin-field">
+                <label for="adm-contact">Контакт администратора</label>
+                <input type="text" id="adm-contact"
+                    value="{{ tariffs_cfg.admin_contact }}" placeholder="@admin">
+            </div>
+            <div class="admin-field">
+                <label for="adm-ticket">Ссылка на тикет (опц.)</label>
+                <input type="text" id="adm-ticket"
+                    value="{{ tariffs_cfg.ticket_url }}" placeholder="https://t.me/...">
+            </div>
+        </div>
+        <label class="admin-toggle">
+            <input type="checkbox" id="adm-active"
+                {% if tariffs_cfg.discount_active %}checked{% endif %}>
+            Скидка включена
+        </label>
+        <div style="display: flex; gap: 10px; margin-top: var(--space-md);">
+            <button class="btn btn-primary" onclick="saveTariffSettings()">💾 Сохранить</button>
+            <span id="adm-status" style="font-size: 0.85rem; color: var(--text-muted); align-self: center;"></span>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<!-- ===== Purchase modal ===== -->
+<div class="modal-backdrop" id="purchaseModal">
+    <div class="modal" style="max-width: 460px;">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <span id="pm-icon">🛒</span>
+                <span id="pm-title">Покупка тарифа</span>
+            </h2>
+            <button class="modal-close" onclick="closeModal('purchaseModal')">×</button>
+        </div>
+
+        <div class="purchase-summary">
+            <div class="purchase-summary-row">
+                <span class="label">Тариф</span>
+                <span id="pm-name">—</span>
+            </div>
+            <div class="purchase-summary-row">
+                <span class="label">Срок</span>
+                <span id="pm-duration">—</span>
+            </div>
+            <div class="purchase-summary-row">
+                <span class="label">Трафик / устройства</span>
+                <span id="pm-traffic">—</span>
+            </div>
+            <div class="purchase-summary-row">
+                <span class="label">К оплате</span>
+                <span id="pm-price">—</span>
+            </div>
+        </div>
+
+        <p style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.55;">
+            Для оформления тарифа свяжитесь с администратором через тикет
+            и укажите <b>выбранный тариф</b> и <b>ваш логин</b> в панели.
+        </p>
+
+        <div class="contact-actions">
+            <button class="btn btn-primary" id="pm-ticket-btn" onclick="openTicket()">
+                🎫 Открыть тикет
+            </button>
+            <button class="btn btn-secondary" onclick="copyContact()">
+                📋 Скопировать контакт администратора (<span id="pm-contact-text">{{ tariffs_cfg.admin_contact }}</span>)
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const TARIFF_CFG = {
+        admin_contact: {{ tariffs_cfg.admin_contact | tojson }},
+        ticket_url: {{ tariffs_cfg.ticket_url | tojson }},
+    };
+
+    let currentTariff = null;
+
+    function openPurchaseModal(t) {
+        currentTariff = t;
+        document.getElementById('pm-icon').textContent = t.icon || '🛒';
+        document.getElementById('pm-title').textContent = (t.id === 'trial' ? 'Запрос пробного: ' : 'Покупка: ') + t.name;
+        document.getElementById('pm-name').textContent = t.name;
+        document.getElementById('pm-duration').textContent = t.duration;
+        document.getElementById('pm-traffic').textContent = `${t.traffic} · ${t.devices} ${t.devices === 1 ? 'устр.' : 'устр.'}`;
+
+        const priceEl = document.getElementById('pm-price');
+        if (t.discounted && t.original_price_label) {
+            priceEl.innerHTML = `<span style="text-decoration: line-through; color: var(--text-muted); font-weight: 500; margin-right: 8px;">${t.original_price_label}</span> <span style="color: var(--accent-light);">${t.price_label}</span>`;
+        } else {
+            priceEl.textContent = t.price_label;
+        }
+
+        const ticketBtn = document.getElementById('pm-ticket-btn');
+        if (TARIFF_CFG.ticket_url) {
+            ticketBtn.style.display = '';
+        } else {
+            ticketBtn.style.display = 'none';
+        }
+
+        openModal('purchaseModal');
+    }
+
+    function openTicket() {
+        if (TARIFF_CFG.ticket_url) {
+            window.open(TARIFF_CFG.ticket_url, '_blank', 'noopener');
+        } else {
+            showToast('Ссылка на тикет не настроена администратором', 'info');
+        }
+    }
+
+    async function copyContact() {
+        const contact = TARIFF_CFG.admin_contact || '';
+        if (!contact) {
+            showToast('Контакт администратора не указан', 'error');
+            return;
+        }
+        await copyToClipboard(contact);
+    }
+
+    async function saveTariffSettings() {
+        const status = document.getElementById('adm-status');
+        status.textContent = 'Сохранение...';
+        status.style.color = 'var(--text-muted)';
+        try {
+            const body = {
+                discount_percent: parseInt(document.getElementById('adm-discount').value || '0', 10),
+                discount_active: document.getElementById('adm-active').checked,
+                discount_label: document.getElementById('adm-discount-label').value || 'Скидка',
+                admin_contact: document.getElementById('adm-contact').value || '',
+                ticket_url: document.getElementById('adm-ticket').value || '',
+            };
+            await apiCall('/api/tariffs/save', 'POST', body);
+            status.textContent = '✓ Сохранено. Обновляю...';
+            status.style.color = 'var(--success)';
+            showToast('Настройки тарифов сохранены', 'success');
+            setTimeout(() => window.location.reload(), 600);
+        } catch (e) {
+            status.textContent = '✕ ' + e.message;
+            status.style.color = 'var(--danger)';
+            showToast(e.message || 'Ошибка', 'error');
+        }
+    }
+</script>
+{% endblock %}
