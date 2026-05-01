@@ -291,5 +291,6 @@
     "account_expiry_label": "Expiry date",
     "account_traffic_label": "Traffic used",
     "account_traffic_remaining": "Remaining",
-    "gb": "GB"
+    "gb": "GB",
+    "tariffs": "Tariffs"
 }

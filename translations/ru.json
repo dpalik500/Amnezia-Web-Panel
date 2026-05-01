@@ -291,5 +291,6 @@
     "account_expiry_label": "Срок действия",
     "account_traffic_label": "Использовано трафика",
     "account_traffic_remaining": "Осталось",
-    "gb": "ГБ"
+    "gb": "ГБ",
+    "tariffs": "Тарифы"
 }
