@@ -958,6 +958,141 @@ async def my_connections_page(request: Request):
                traffic_limit=user_data.get('traffic_limit', 0))
 
 
+# ======================== TARIFFS ========================
+
+DEFAULT_TARIFFS = [
+    {
+        "id": "trial",
+        "icon": "🆓",
+        "name": "Пробный",
+        "price": 0,
+        "currency": "₽",
+        "price_label": "Бесплатно",
+        "traffic": "10 GB",
+        "devices": 1,
+        "duration": "14 дней",
+        "duration_note": "с возможностью продления через тикет",
+        "features": ["10 ГБ трафика", "1 устройство", "Базовая скорость", "Поддержка в тикете"],
+        "highlight": False,
+        "accent": "#22c55e",
+        "discountable": False,
+    },
+    {
+        "id": "start",
+        "icon": "⚔️",
+        "name": "Начало",
+        "price": 30,
+        "currency": "₽",
+        "price_label": "30 ₽",
+        "traffic": "350 GB",
+        "devices": 1,
+        "duration": "10 дней",
+        "duration_note": "",
+        "features": ["350 ГБ трафика", "1 устройство", "Высокая скорость", "Все локации"],
+        "highlight": False,
+        "accent": "#3b82f6",
+        "discountable": True,
+    },
+    {
+        "id": "season",
+        "icon": "🛡️",
+        "name": "Сезон",
+        "price": 100,
+        "currency": "₽",
+        "price_label": "100 ₽",
+        "traffic": "Безлимит",
+        "devices": 2,
+        "duration": "30 дней",
+        "duration_note": "",
+        "features": ["Безлимитный трафик", "2 устройства", "Максимальная скорость", "Все локации", "Приоритетная поддержка"],
+        "highlight": True,
+        "accent": "#8b5cf6",
+        "discountable": True,
+    },
+    {
+        "id": "clan",
+        "icon": "👑",
+        "name": "Клан",
+        "price": 300,
+        "currency": "₽",
+        "price_label": "300 ₽",
+        "traffic": "Безлимит",
+        "devices": 6,
+        "duration": "30 дней",
+        "duration_note": "",
+        "features": ["Безлимитный трафик", "6 устройств", "Максимальная скорость", "Все локации", "VIP поддержка", "Подходит для семьи / команды"],
+        "highlight": False,
+        "accent": "#f59e0b",
+        "discountable": True,
+    },
+]
+
+
+def _get_tariff_settings(data):
+    settings = data.setdefault('settings', {})
+    tariffs_cfg = settings.setdefault('tariffs', {})
+    tariffs_cfg.setdefault('discount_percent', 0)
+    tariffs_cfg.setdefault('discount_active', False)
+    tariffs_cfg.setdefault('discount_label', 'Скидка')
+    tariffs_cfg.setdefault('admin_contact', '@admin')
+    tariffs_cfg.setdefault('ticket_url', '')
+    return tariffs_cfg
+
+
+@app.get('/tariffs', response_class=HTMLResponse)
+async def tariffs_page(request: Request):
+    data = load_data()
+    cfg = _get_tariff_settings(data)
+    discount = max(0, min(100, int(cfg.get('discount_percent', 0) or 0)))
+    active = bool(cfg.get('discount_active')) and discount > 0
+
+    tariffs = []
+    for t in DEFAULT_TARIFFS:
+        item = dict(t)
+        if active and t['discountable'] and t['price'] > 0:
+            new_price = round(t['price'] * (100 - discount) / 100, 2)
+            new_price_int = int(new_price) if new_price == int(new_price) else new_price
+            item['original_price_label'] = f"{int(t['price'])} {t['currency']}"
+            item['price_label'] = f"{new_price_int} {t['currency']}"
+            item['discounted'] = True
+        else:
+            item['discounted'] = False
+        tariffs.append(item)
+
+    return tpl(
+        request,
+        'tariffs.html',
+        tariffs=tariffs,
+        tariffs_cfg=cfg,
+        discount_active=active,
+        discount_percent=discount,
+    )
+
+
+class TariffSettingsRequest(BaseModel):
+    discount_percent: int = 0
+    discount_active: bool = False
+    discount_label: str = 'Скидка'
+    admin_contact: str = ''
+    ticket_url: str = ''
+
+
+@app.post('/api/tariffs/save')
+async def api_tariffs_save(request: Request, payload: TariffSettingsRequest):
+    user = get_current_user(request)
+    if not user or user.get('role') != 'admin':
+        return JSONResponse({'error': 'Forbidden'}, status_code=403)
+    data = load_data()
+    cfg = _get_tariff_settings(data)
+    cfg['discount_percent'] = max(0, min(100, int(payload.discount_percent or 0)))
+    cfg['discount_active'] = bool(payload.discount_active)
+    cfg['discount_label'] = (payload.discount_label or 'Скидка').strip()[:40]
+    cfg['admin_contact'] = (payload.admin_contact or '').strip()[:120]
+    cfg['ticket_url'] = (payload.ticket_url or '').strip()[:200]
+    await save_data_async(data)
+    return {'status': 'success', 'tariffs': cfg}
+
+
 # ======================== AUTH API ========================
 
 @app.get('/api/auth/captcha')
