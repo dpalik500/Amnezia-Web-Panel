@@ -1031,11 +1031,11 @@ DEFAULT_TARIFFS = [
 def _get_tariff_settings(data):
     settings = data.setdefault('settings', {})
     tariffs_cfg = settings.setdefault('tariffs', {})
-    tariffs_cfg.setdefault('discount_percent', 0)
+    tariffs_cfg.setdefault('discount_percent', 15)
     tariffs_cfg.setdefault('discount_active', False)
     tariffs_cfg.setdefault('discount_label', 'Скидка')
-    tariffs_cfg.setdefault('admin_contact', '@admin')
-    tariffs_cfg.setdefault('ticket_url', '')
+    tariffs_cfg.setdefault('admin_contact', 'https://discord.gg/tWHHQgwb3d')
+    tariffs_cfg.setdefault('ticket_url', 'https://discord.com/channels/1139539257485176882/1401577387279253514')
     return tariffs_cfg
 
 
