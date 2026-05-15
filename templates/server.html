@@ -209,76 +209,8 @@
             </div>
         </div>
     </div>
-    <!-- WireGuard Card -->
-    <div class="card card-hover protocol-card protocol-wireguard" id="proto-wireguard">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-            <div class="protocol-icon">🔒</div>
-            <div class="flex gap-sm" id="wireguard-ctrl" style="display:none!important;"></div>
-        </div>
-        <div class="protocol-name">WireGuard</div>
-        <div class="protocol-desc">
-            {{ _('wireguard_desc') }}
-        </div>
-        <div class="protocol-status" id="wireguard-status">
-            <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-        </div>
-        <div id="wireguard-info" class="hidden">
-            <div class="protocol-info" id="wireguard-info-grid"></div>
-        </div>
-        <div class="flex gap-sm" id="wireguard-actions">
-            <button class="btn btn-primary btn-sm" onclick="openInstallModal('wireguard')" id="wireguard-install-btn"
-                style="flex:1">
-                {{ _('install') }}
-            </button>
-        </div>
-    </div>
-
-    <!-- ===== AIVPN teaser (locked, full grid width) ===== -->
-    <div class="promo-block promo-aivpn" aria-disabled="true" role="article">
-        <div class="promo-orbs" aria-hidden="true">
-            <span class="promo-orb"></span>
-            <span class="promo-orb"></span>
-            <span class="promo-orb"></span>
-        </div>
-        <span class="promo-lock-badge">🔒 {{ _('coming_soon') }}</span>
-        <div class="promo-content">
-            <div class="promo-icon" aria-hidden="true">🧠</div>
-            <div class="promo-text">
-                <div class="promo-title">AIVPN</div>
-                <div class="promo-subtitle">{{ _('aivpn_subtitle') }}</div>
-            </div>
-            <a class="promo-cta" href="https://github.com/PRVTPRO/Amnezia-Web-Panel" target="_blank" rel="noopener">
-                ⭐ <span>{{ _('promo_star_cta') }}</span>
-            </a>
-        </div>
-    </div>
 </div>
 
-    <div class="protocol-cards hidden" id="services-grid">
-        <!-- DNS Card -->
-        <div class="card card-hover protocol-card protocol-dns" id="proto-dns">
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
-                <div class="protocol-icon">🔍</div>
-                <div class="flex gap-sm" id="dns-ctrl" style="display:none!important;"></div>
-            </div>
-            <div class="protocol-name">AmneziaDNS</div>
-            <div class="protocol-desc">
-                {{ _('dns_desc') }}
-            </div>
-            <div class="protocol-status" id="dns-status">
-                <span class="badge badge-warn"><span class="badge-dot"></span> {{ _('not_checked') }}</span>
-            </div>
-            <div id="dns-info" class="hidden">
-                <div class="protocol-info" id="dns-info-grid"></div>
-            </div>
-            <div class="flex gap-sm" id="dns-actions">
-                <button class="btn btn-primary btn-sm" onclick="openInstallModal('dns')" id="dns-install-btn"
-                    style="flex:1">
-                    {{ _('install') }}
-                </button>
-            </div>
-        </div>
-    </div>
 <div class="protocol-cards hidden" id="services-grid">
     <!-- DNS Card -->
     <div class="card card-hover protocol-card protocol-dns" id="proto-dns">
@@ -816,7 +748,7 @@
         const spinner = document.getElementById('checkSpinner');
         btn.disabled = true;
         text.textContent = _('server_checking');
-        spinner.classList.remove('remove');
+        spinner.classList.remove('hidden');
         try {
             const data = await apiCall(`/api/servers/${SERVER_ID}/check`, 'POST');
             const statusDiv = document.getElementById('serverStatus');
@@ -952,7 +884,6 @@
         if (info.container_running) {
             installedProtocols[proto] = true;
             statusEl.innerHTML = `<span class="badge badge-success"><span class="badge-dot"></span> ${_('run')}</span>`;
-            if ((info.port || info.clients_count !== undefined) && infoEl && infoGrid) {
             if (info.port || info.clients_count !== undefined || isService) {
                 infoEl.classList.remove('hidden');
                 let grid = '';
