@@ -3586,8 +3586,8 @@ async def api_list_users(request: Request, search: str = '', page: int = 1, size
 
 @app.post('/api/users/add', tags=["Users"])
 async def api_add_user(request: Request, req: AddUserRequest):
-    cur = get_current_user(request)
-    if not cur or cur['role'] != 'admin' or 'helper' or 'support':
+    cur = _check_admin(request)
+    if not cur:
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     try:
         data = load_data()
@@ -3714,8 +3714,8 @@ async def api_update_user(request: Request, user_id: str, req: UpdateUserRequest
 
 @app.post('/api/users/{user_id}/delete', tags=["Users"])
 async def api_delete_user(request: Request, user_id: str):
-    cur = get_current_user(request)
-    if not cur or cur['role'] != 'admin' or 'helper' or 'support':
+    cur = _check_admin(request)
+    if not cur:
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     lang = request.cookies.get('lang', 'ru')
     if cur['id'] == user_id:
@@ -3734,8 +3734,8 @@ async def api_delete_user(request: Request, user_id: str):
 
 @app.post('/api/users/{user_id}/toggle', tags=["Users"])
 async def api_toggle_user(request: Request, user_id: str, req: ToggleUserRequest):
-    cur = get_current_user(request)
-    if not cur or cur['role'] != 'admin' or 'helper' or 'support':
+    cur = _check_admin(request)
+    if not cur:
         return JSONResponse({'error': 'Forbidden'}, status_code=403)
     try:
         data = load_data()
