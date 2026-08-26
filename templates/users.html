@@ -88,7 +88,7 @@
             <div class="grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
                 <div class="form-group">
                     <label class="form-label">{{ _('tg_id_label') }}</label>
-                    <input class="form-input" type="text" id="newTelegramId" placeholder="Discord ID">
+                    <input class="form-input" type="text" id="newTelegramId" placeholder="@username or ID">
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ _('email_label') }}</label>
@@ -114,7 +114,11 @@
 
             <div class="form-group">
                 <label class="form-label">{{ _('expiration_date_label') }}</label>
-                <input class="form-input" type="datetime-local" id="newExpirationDate">
+                <div class="grid" style="display: grid; grid-template-columns: 1fr 120px auto; gap: var(--space-sm); align-items: center;">
+                    <input class="form-input" type="date" id="newExpirationDate" aria-label="Expiration date">
+                    <select class="form-select" id="newExpirationTime" aria-label="Expiration time"></select>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearDateTimeFields('newExpirationDate', 'newExpirationTime')">Без срока</button>
+                </div>
             </div>
 
             <div class="form-group">
@@ -173,8 +177,8 @@
                     <input class="form-input" type="number" id="newUserTelemtMaxIps" placeholder="Optional" min="1">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Expiration Date (ISO 8601)</label>
-                    <input class="form-input" type="text" id="newUserTelemtExpiry" placeholder="e.g. 2026-12-31T23:59:59Z">
+                    <label class="form-label">{{ _('expiration_date_label') }}</label>
+                    <input class="form-input" type="datetime-local" id="newUserTelemtExpiry">
                 </div>
             </div>
 
@@ -216,17 +220,27 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ _('traffic_reset_strategy_label') }}</label>
-                    <select class="form-select" id="editUserTrafficResetStrategy">
-                        <option value="never">{{ _('traffic_reset_never') }}</option>
-                        <option value="daily">{{ _('traffic_reset_daily') }}</option>
-                        <option value="weekly">{{ _('traffic_reset_weekly') }}</option>
-                        <option value="monthly">{{ _('traffic_reset_monthly') }}</option>
-                    </select>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: var(--space-sm); align-items: center;">
+                        <select class="form-select" id="editUserTrafficResetStrategy">
+                            <option value="never">{{ _('traffic_reset_never') }}</option>
+                            <option value="daily">{{ _('traffic_reset_daily') }}</option>
+                            <option value="weekly">{{ _('traffic_reset_weekly') }}</option>
+                            <option value="monthly">{{ _('traffic_reset_monthly') }}</option>
+                        </select>
+                        <button type="button" class="btn btn-secondary btn-sm" id="resetTrafficBtn" onclick="resetUserTraffic()">
+                            <span id="resetTrafficBtnText">{{ _('reset_traffic') }}</span>
+                            <div class="spinner hidden" id="resetTrafficSpinner"></div>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ _('expiration_date_label') }}</label>
-                <input class="form-input" type="datetime-local" id="editUserExpiration">
+                <div class="grid" style="display: grid; grid-template-columns: 1fr 120px auto; gap: var(--space-sm); align-items: center;">
+                    <input class="form-input" type="date" id="editUserExpiration" aria-label="Expiration date">
+                    <select class="form-select" id="editUserExpirationTime" aria-label="Expiration time"></select>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearDateTimeFields('editUserExpiration', 'editUserExpirationTime')">Без срока</button>
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">{{ _('description_label') }}</label>
@@ -475,6 +489,54 @@
     }
 
 
+    function populateTimeSelect(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select || select.options.length) return;
+        for (let hour = 0; hour < 24; hour++) {
+            for (const minute of [0, 15, 30, 45]) {
+                const value = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                select.add(new Option(value, value));
+            }
+        }
+        select.add(new Option('23:59', '23:59'));
+        select.value = '23:59';
+    }
+
+    function setupDateTimeFields() {
+        populateTimeSelect('newExpirationTime');
+        populateTimeSelect('editUserExpirationTime');
+    }
+
+    function clearDateTimeFields(dateId, timeId) {
+        const dateEl = document.getElementById(dateId);
+        const timeEl = document.getElementById(timeId);
+        if (dateEl) dateEl.value = '';
+        if (timeEl) timeEl.value = '23:59';
+    }
+
+    function getDateTimeValue(dateId, timeId) {
+        const date = document.getElementById(dateId).value;
+        if (!date) return null;
+        const time = document.getElementById(timeId).value || '23:59';
+        return `${date}T${time}`;
+    }
+
+    function setDateTimeValue(dateId, timeId, value) {
+        const dateEl = document.getElementById(dateId);
+        const timeEl = document.getElementById(timeId);
+        const localValue = toDateTimeLocalValue(value);
+        if (!localValue) {
+            clearDateTimeFields(dateId, timeId);
+            return;
+        }
+        dateEl.value = localValue.slice(0, 10);
+        const timeValue = localValue.slice(11, 16);
+        if (![...timeEl.options].some(option => option.value === timeValue)) {
+            timeEl.add(new Option(timeValue, timeValue));
+        }
+        timeEl.value = timeValue;
+    }
+
     function handleSearch(val) {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
@@ -541,8 +603,8 @@
                         limitHtml = `
                                          <div style="margin-top: 8px; font-size: 0.75rem;">
                                             <div style="display:flex; justify-content:space-between; color:var(--text-muted); margin-bottom: 2px;">
-                                                <span>${_('traffic')}: ${(u.traffic_used / Math.pow(1024, 3)).toFixed(2)} ГБ</span>
-                                                <span>${_('out_of')} ${(u.traffic_limit / Math.pow(1024, 3)).toFixed(2)} ГБ</span>
+                                                <span>${_('traffic')}: ${(u.traffic_used / Math.pow(1024, 3)).toFixed(2)} ${_('gb')}</span>
+                                                <span>${_('out_of')} ${(u.traffic_limit / Math.pow(1024, 3)).toFixed(2)} ${_('gb')}</span>
                                             </div>
                                             <div style="width: 100%; height: 4px; background: var(--bg-tertiary); border-radius: 2px; overflow: hidden;">
                                                 <div style="background-color: ${colorClass}; height: 100%; width: ${pct}%; transition: width 0.3s ease;"></div>
@@ -552,7 +614,7 @@
                     } else if (u.traffic_used > 0) {
                         limitHtml = `
                                         <div style="margin-top: 8px; font-size: 0.75rem; color:var(--text-muted);">
-                                            <span>${_('traffic')}: ${(u.traffic_used / Math.pow(1024, 3)).toFixed(2)} ГБ</span>
+                                            <span>${_('traffic')}: ${(u.traffic_used / Math.pow(1024, 3)).toFixed(2)} ${_('gb')}</span>
                                         </div>
                                     `;
                     }
@@ -560,7 +622,7 @@
                 })()}
                             ${(() => {
                     if (u.traffic_total > 0) {
-                        return `<div class="client-meta" style="font-size: 0.7rem; opacity: 0.6; margin-top: 2px;">📈 ${_('traffic_used_total')}: ${(u.traffic_total / Math.pow(1024, 3)).toFixed(2)} ГБ</div>`;
+                        return `<div class="client-meta" style="font-size: 0.7rem; opacity: 0.6; margin-top: 2px;">📈 ${_('traffic_used_total')}: ${(u.traffic_total / Math.pow(1024, 3)).toFixed(2)} ${_('gb')}</div>`;
                     }
                     return '';
                 })()}
@@ -575,24 +637,18 @@
                         <button class="btn btn-secondary btn-sm btn-icon" 
                                 onclick='openEditUser({"id": "${u.id}", "username": "${u.username}", "tg": "${u.telegramId || ""}", "email": "${u.email || ""}", "desc": "${u.description || ""}", "limit": "${u.traffic_limit ? (u.traffic_limit / Math.pow(1024, 3)).toFixed(2) : 0}", "strategy": "${u.traffic_reset_strategy || 'never'}", "expiration": "${u.expiration_date || ''}"})'
                                 title="${_('edit')}">✏️</button>
-                        {% if current_user.role == 'helper' %}
-                        {% else %}
                         <button class="btn btn-secondary btn-sm btn-icon" onclick="openShareModal(this.dataset)"
                                 data-id="${u.id}" data-username="${u.username}" data-token="${u.share_token || ''}"
                                 data-enabled="${u.share_enabled ? 'true' : 'false'}"
                                 data-haspassword="${u.has_share_password ? 'true' : 'false'}"
                                 title="${_('share_access')}">📤</button>
-                        {% endif %}
                         ${u.id !== "{{ current_user.id }}" ? `
                             <button class="btn btn-secondary btn-sm btn-icon" onclick="toggleUser(this.dataset)"
                                     data-id="${u.id}" data-enable="${u.enabled ? 'false' : 'true'}"
                                     title="${u.enabled ? _('stop_btn') : _('start_btn')}">
                                 ${u.enabled ? '🔵' : '⚫'}
                             </button>
-                            {% if current_user.role == 'helper' %}
-                            {% else %}
                             <button class="btn btn-danger btn-sm btn-icon" onclick="deleteUser('${u.id}')" title="${_('delete')}">🗑</button>
-                            {% endif %}
                         ` : ''}
                         {% endif %}
                     </div>
@@ -608,13 +664,14 @@
             container.classList.remove('hidden');
         } catch (err) {
             showToast(`${_('error')}: ` + err.message, 'error');
-        } finally {
-            loading.classList.add('hidden');
         }
     }
 
     // Call on load
-    document.addEventListener('DOMContentLoaded', refreshUsersList);
+    document.addEventListener('DOMContentLoaded', () => {
+        setupDateTimeFields();
+        refreshUsersList();
+    });
 
     function updateProtocols(serverId, selectId, groupId = null) {
         const select = document.getElementById(selectId);
@@ -701,7 +758,7 @@
                 description: document.getElementById('newDescription').value || null,
                 traffic_limit: parseFloat(document.getElementById('newTrafficLimit').value || '0'),
                 traffic_reset_strategy: document.getElementById('newTrafficResetStrategy').value,
-                expiration_date: document.getElementById('newExpirationDate').value || null,
+                expiration_date: getDateTimeValue('newExpirationDate', 'newExpirationTime'),
             };
             const serverId = document.getElementById('newUserServer').value;
             if (serverId !== '') {
@@ -994,6 +1051,18 @@
 <script>
     let currentSharedUser = null;
 
+    function toDateTimeLocalValue(value) {
+        if (!value) return '';
+        const raw = String(value).trim();
+        if (!raw) return '';
+        const match = raw.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})/);
+        if (match) return match[1];
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return '';
+        const offsetMs = parsed.getTimezoneOffset() * 60000;
+        return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
+    }
+
     function openEditUser(data) {
         document.getElementById('editUserId').value = data.id;
         document.getElementById('editUserTitle').textContent = data.username;
@@ -1005,7 +1074,33 @@
         document.getElementById('editUserExpiration').value = data.expiration || '';
         const editUserPass = document.getElementById('editUserPass');
         if (editUserPass) editUserPass.value = '';
+        setDateTimeValue('editUserExpiration', 'editUserExpirationTime', data.expiration);
+        document.getElementById('editUserPass').value = '';
         openModal('editUserModal');
+    }
+
+    async function resetUserTraffic() {
+        const uid = document.getElementById('editUserId').value;
+        if (!uid || !confirm(_('reset_traffic_confirm'))) return;
+
+        const btn = document.getElementById('resetTrafficBtn');
+        const text = document.getElementById('resetTrafficBtnText');
+        const spinner = document.getElementById('resetTrafficSpinner');
+        btn.disabled = true;
+        text.textContent = _('resetting');
+        spinner.classList.remove('hidden');
+
+        try {
+            await apiCall(`/api/users/${uid}/traffic/reset`, 'POST');
+            showToast(_('traffic_reset_success'), 'success');
+            refreshUsersList();
+        } catch (err) {
+            showToast(`${_('error')}: ` + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            text.textContent = _('reset_traffic');
+            spinner.classList.add('hidden');
+        }
     }
 
     async function saveEditUser() {
@@ -1020,8 +1115,8 @@
             description: document.getElementById('editUserDesc').value,
             traffic_limit: parseFloat(document.getElementById('editUserLimit').value || '0'),
             traffic_reset_strategy: document.getElementById('editUserTrafficResetStrategy').value,
-            expiration_date: document.getElementById('editUserExpiration').value || null,
-            password: document.getElementById('editUserPass')?.value || null
+            expiration_date: getDateTimeValue('editUserExpiration', 'editUserExpirationTime'),
+            password: document.getElementById('editUserPass').value || null
         };
 
         btn.disabled = true;
