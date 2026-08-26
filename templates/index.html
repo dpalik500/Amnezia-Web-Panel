@@ -2,6 +2,7 @@
 
 {% block content %}
 <section>
+{% if current_user == 'admin' %}
     <div class="flex items-center justify-between" style="margin-bottom: var(--space-lg);">
         <h1 class="section-title" style="margin-bottom:0;">
             <span class="icon">🖥</span>
@@ -11,6 +12,7 @@
             <span>＋</span> {{ _('add_server') }}
         </button>
     </div>
+{% endif %}
 
     {% if servers %}
     <div class="server-grid" id="serverGrid">

@@ -140,6 +140,7 @@
             </button>
         </div>
     </div>
+    {% if current_user == 'admin' %}
     <div id="serverStatus" class="mt-md hidden">
         <div class="divider"></div>
         <div class="server-status-row">
@@ -154,6 +155,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Installed Applications Section -->
@@ -162,6 +164,7 @@
     <div class="loading-spinner"></div>
     <span>{{ _('checking_server') }}</span>
 </div>
+{% if current_user == 'admin' %}
 <div class="empty-state hidden" id="installedAppsEmpty" style="padding: var(--space-xl) 0; margin-bottom: var(--space-xl);">
     <div class="empty-icon">🛒</div>
     <div class="empty-title">{{ _('no_installed_apps') }}</div>
@@ -170,7 +173,9 @@
         {{ _('open_marketplace') }}
     </button>
 </div>
+{% endif %}
 
+{% if current_user == 'admin' %}
 <div class="protocol-cards" id="protocols-grid">
     <!-- AWG3 Card (first - newest version).
          Installed-protocol tiles are static cards toggled by
@@ -483,7 +488,9 @@
         </div>
     </div>
 </div>
+{% endif %}
 
+{% if current_user == 'admin' %}
 <div class="promo-block promo-aivpn" aria-disabled="true" role="article">
     <div class="promo-orbs" aria-hidden="true">
         <span class="promo-orb"></span>
@@ -502,6 +509,7 @@
         </a>
     </div>
 </div>
+{% endif %}
 
 <!-- Connections Section (renamed from Clients) -->
 <div class="clients-section" id="connectionsSection" style="display:none;">
