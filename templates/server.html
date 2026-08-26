@@ -140,7 +140,7 @@
             </button>
         </div>
     </div>
-    {% if current_user == 'admin' %}
+    {% if current_user.role == 'admin' %}
     <div id="serverStatus" class="mt-md hidden">
         <div class="divider"></div>
         <div class="server-status-row">
@@ -164,7 +164,7 @@
     <div class="loading-spinner"></div>
     <span>{{ _('checking_server') }}</span>
 </div>
-{% if current_user == 'admin' %}
+{% if current_user.role == 'admin' %}
 <div class="empty-state hidden" id="installedAppsEmpty" style="padding: var(--space-xl) 0; margin-bottom: var(--space-xl);">
     <div class="empty-icon">🛒</div>
     <div class="empty-title">{{ _('no_installed_apps') }}</div>
@@ -175,7 +175,7 @@
 </div>
 {% endif %}
 
-{% if current_user == 'admin' %}
+{% if current_user.role == 'admin' %}
 <div class="protocol-cards" id="protocols-grid">
     <!-- AWG3 Card (first - newest version).
          Installed-protocol tiles are static cards toggled by
@@ -490,7 +490,7 @@
 </div>
 {% endif %}
 
-{% if current_user == 'admin' %}
+{% if current_user.role == 'admin' %}
 <div class="promo-block promo-aivpn" aria-disabled="true" role="article">
     <div class="promo-orbs" aria-hidden="true">
         <span class="promo-orb"></span>

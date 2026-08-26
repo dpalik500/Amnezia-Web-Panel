@@ -2,7 +2,7 @@
 
 {% block content %}
 <section>
-{% if current_user == 'admin' %}
+{% if current_user.role == 'admin' %}
     <div class="flex items-center justify-between" style="margin-bottom: var(--space-lg);">
         <h1 class="section-title" style="margin-bottom:0;">
             <span class="icon">🖥</span>
@@ -78,7 +78,7 @@
         <div class="empty-desc">
             {{ _('add_server_desc') }}
         </div>
-        {% if current_user == 'admin' %}
+        {% if current_user.role == 'admin' %}
         <button class="btn btn-primary" onclick="openModal('addServerModal')">
             <span>＋</span> {{ _('add_server') }}
         </button>
