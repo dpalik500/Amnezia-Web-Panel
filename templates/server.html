@@ -201,16 +201,13 @@
         </div>
     </div>
 
-<div class="protocol-cards" id="protocols-grid">
-    <!-- AWG2 Card (first - new version) -->
+    <!-- AWG2 Card -->
     <div class="card card-hover protocol-card protocol-awg" id="proto-awg2">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-sm);">
             <div class="protocol-icon">✨</div>
             <div class="flex gap-sm" id="awg2-ctrl" style="display:none!important;"></div>
         </div>
-        <div class="protocol-name">AmneziaWG 2.0 <span
-                style="font-size:0.65rem; background:var(--accent); color:#fff; padding:2px 6px; border-radius:8px; vertical-align:middle;">NEW</span>
-        </div>
+        <div class="protocol-name">AmneziaWG 2.0</div>
         <div class="protocol-desc">
             {{ _('awg_desc') }}
         </div>
@@ -487,26 +484,22 @@
     </div>
 </div>
 
-<div class="protocol-cards hidden" id="management-grid" style="margin-bottom: var(--space-xl);">
-    <div class="card" style="margin-bottom: var(--space-md); width:100%; max-width:600px;">
-        <div class="card-title">{{ _('server_management') }}</div>
-        <div class="card-subtitle" style="margin-bottom: var(--space-md);">
-            {{ _('server_management_desc') }}
+<div class="promo-block promo-aivpn" aria-disabled="true" role="article">
+    <div class="promo-orbs" aria-hidden="true">
+        <span class="promo-orb"></span>
+        <span class="promo-orb"></span>
+        <span class="promo-orb"></span>
+    </div>
+    <span class="promo-lock-badge">🔒 Coming soon</span>
+    <div class="promo-content">
+        <div class="promo-icon" aria-hidden="true">🧠</div>
+        <div class="promo-text">
+            <div class="promo-title">AIVPN</div>
+            <div class="promo-subtitle">AI-driven protocol selection that picks the right tunnel for the moment. Land it sooner — drop a star.</div>
         </div>
-        <div class="flex" style="flex-direction: column; gap: var(--space-sm);">
-            <button class="btn btn-secondary" onclick="checkServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">🔄</span> {{ _('check_server_services') }}
-            </button>
-            <button class="btn btn-secondary" onclick="rebootServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">♻️</span> {{ _('reboot_server') }}
-            </button>
-            <button class="btn btn-danger" onclick="clearServer()" style="justify-content: flex-start; padding: 12px 20px; background: rgba(239, 68, 68, 0.05);">
-                <span style="font-size: 1.2rem; margin-right: 8px;">🗑️</span> {{ _('clear_server') }}
-            </button>
-            <button class="btn btn-danger" onclick="removeServer()" style="justify-content: flex-start; padding: 12px 20px;">
-                <span style="font-size: 1.2rem; margin-right: 8px;">❌</span> {{ _('remove_server') }}
-            </button>
-        </div>
+        <a class="promo-cta" href="https://github.com/PRVTPRO/Amnezia-Web-Panel" target="_blank" rel="noopener">
+            ⭐ <span>Star us on GitHub</span>
+        </a>
     </div>
 </div>
 
@@ -2205,7 +2198,7 @@
             if (isEdit && clientData) {
                 editingClientId = clientData.clientName;
                 document.getElementById('telemtQuota').value = clientData.quota || '';
-                document.getElementById('telemtMaxIps').value = ''; 
+                document.getElementById('telemtMaxIps').value = '';
                 document.getElementById('telemtExpiry').value = clientData.expiry || '';
                 document.getElementById('telemtSecret').value = clientData.token || '';
                 document.getElementById('telemtAdTag').value = clientData.user_ad_tag || '';
