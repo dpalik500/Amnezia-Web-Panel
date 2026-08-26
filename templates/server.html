@@ -166,7 +166,7 @@
     <div class="loading-spinner"></div>
     <span>{{ _('checking_server') }}</span>
 </div>
-{% if current_user.role == 'admin' or support %}
+{% if current_user.role in ['admin'] %}
 <div class="empty-state hidden" id="installedAppsEmpty" style="padding: var(--space-xl) 0; margin-bottom: var(--space-xl);">
     <div class="empty-icon">🛒</div>
     <div class="empty-title">{{ _('no_installed_apps') }}</div>
@@ -177,7 +177,7 @@
 </div>
 {% endif %}
 
-{% if current_user.role == 'admin' or 'support %}
+{% if current_user.role in ['admin'] %}
 <div class="protocol-cards" id="protocols-grid">
     <!-- AWG3 Card (first - newest version).
          Installed-protocol tiles are static cards toggled by
@@ -1251,14 +1251,14 @@
         const btn = document.getElementById('checkBtn');
         const text = document.getElementById('checkBtnText');
         const spinner = document.getElementById('checkSpinner');
-        btn.disabled = true;
-        text.textContent = _('server_checking');
-        spinner.classList.remove('hidden');
+        if (btn) btn.disabled = true;
+        if (text) text.textContent = _('server_checking');
+        if (spinner) spinner.classList.remove('hidden');
         try {
             const data = await apiCall(`/api/servers/${SERVER_ID}/check`, 'POST');
             const statusDiv = document.getElementById('serverStatus');
             const badges = document.getElementById('statusBadges');
-            statusDiv.classList.remove('hidden');
+            if (statusDiv) statusDiv.classList.remove('hidden');
             let html = '';
             if (data.connection === 'ok') {
                 html += `<span class="badge badge-success"><span class="badge-dot"></span> ${_('ssh_ok')}</span>`;
@@ -1268,9 +1268,10 @@
             } else {
                 html += `<span class="badge badge-warn"><span class="badge-dot"></span> ${_('docker_not_installed')}</span>`;
             }
-            badges.innerHTML = html;
+            if (badges) badges.innerHTML = html;
             if (data.protocols) {
                 const protoSelect = document.getElementById('connProtoSelect');
+                if (!protoSelect) { updateStatusCounts(data.protocols || {}); return; }
                 const currentVal = protoSelect.value;
                 protoSelect.innerHTML = '';
                 let firstVal = null;
@@ -1308,14 +1309,14 @@
             showToast(_('error') + ': ' + err.message, 'error');
             const statusDiv = document.getElementById('serverStatus');
             const badges = document.getElementById('statusBadges');
-            statusDiv.classList.remove('hidden');
-            badges.innerHTML = `<span class="badge badge-danger"><span class="badge-dot"></span> ${_('server_connection_error')}</span>`;
+            if (statusDiv) statusDiv.classList.remove('hidden');
+            if (badges) badges.innerHTML = `<span class="badge badge-danger"><span class="badge-dot"></span> ${_('server_connection_error')}</span>`;
         } finally {
             setInstalledAppsLoading(false);
             applyInstalledAppsVisibility();
-            btn.disabled = false;
-            text.textContent = _('server_check');
-            spinner.classList.add('hidden');
+            if (btn) btn.disabled = false;
+            if (text) text.textContent = _('server_check');
+            if (spinner) spinner.classList.add('hidden');
         }
     }
 
