@@ -2077,7 +2077,7 @@ async def server_detail(request: Request, server_id: int):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url='/login', status_code=302)
-    if user['role'] not in ('admin', 'support'):
+    if user['role'] not in ('admin', 'support', 'helper'):
         return RedirectResponse(url='/my', status_code=302)
     data = load_data()
     if server_id >= len(data['servers']):
@@ -2092,7 +2092,7 @@ async def users_page(request: Request):
     user = get_current_user(request)
     if not user:
         return RedirectResponse(url='/login', status_code=302)
-    if user['role'] not in ('admin', 'support'):
+    if user['role'] not in ('admin', 'support', 'helper'):
         return RedirectResponse(url='/my', status_code=302)
     data = load_data()
     users_list = data.get('users', [])
