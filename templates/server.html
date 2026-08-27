@@ -171,7 +171,7 @@
     <div class="empty-icon">🛒</div>
     <div class="empty-title">{{ _('no_installed_apps') }}</div>
     <div class="empty-desc">{{ _('no_installed_apps_desc') }}</div>
-    {% if current_user.role in ['admin', 'support'] %}
+    {% if current_user.role in ['admin'] %}
     <button class="btn btn-primary btn-sm" onclick="openMarketplaceModal()" style="margin-top: var(--space-md);">
         {{ _('open_marketplace') }}
     </button>
@@ -179,7 +179,7 @@
 </div>
 
 
-{% if current_user.role in ['admin'] %}
+
 <div class="protocol-cards" id="protocols-grid">
     <!-- AWG3 Card (first - newest version).
          Installed-protocol tiles are static cards toggled by
@@ -492,7 +492,7 @@
         </div>
     </div>
 </div>
-{% endif %}
+
 
 {% if current_user.role == 'admin' %}
 <div class="promo-block promo-aivpn" aria-disabled="true" role="article">
