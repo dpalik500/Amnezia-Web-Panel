@@ -1578,15 +1578,19 @@
             statusEl.innerHTML = `<span class="badge badge-danger"><span class="badge-dot"></span> ${_('stop')}</span>`;
             if (isService) {
                 actionsEl.innerHTML = `
+                    {% if current_user.role == 'admin' %}
                     <button class="btn btn-primary btn-sm" onclick="openInstallModal('${proto}')" style="flex:1">${_('reinstall')}</button>
                     <button class="btn btn-secondary btn-sm" onclick="showProtocolBackups('${proto}')">${_('backup')}</button>
                     <button class="btn btn-danger btn-sm" onclick="uninstallProtocol('${proto}')">${_('uninstall')}</button>
+                    {% enfif %}
                 `;
             } else {
                 actionsEl.innerHTML = `
+                    {% if current_user.role == 'admin' %}
                     <button class="btn btn-primary btn-sm" onclick="openInstallModal('${proto}')" style="flex:1">${_('reinstall')}</button>
                     <button class="btn btn-secondary btn-sm" onclick="showProtocolBackups('${proto}')">${_('backup')}</button>
                     <button class="btn btn-danger btn-sm" onclick="uninstallProtocol('${proto}')">${_('uninstall')}</button>
+                    {% endif %}
                 `;
             }
             if (ctrlEl) {
