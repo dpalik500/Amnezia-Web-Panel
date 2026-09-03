@@ -102,7 +102,7 @@ templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "t
 if getattr(sys, 'frozen', False):
     application_path = os.path.dirname(sys.executable)
 else:
-    application_path = os.path.dirname(__file__)
+    application_path = os.path.dirname('data/')
 
 DATA_FILE = os.path.join(application_path, 'data.json')
 CURRENT_VERSION = "v1.6.0"
